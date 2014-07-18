@@ -20,6 +20,7 @@ from magneto.utils.decorators import docker_alive
 部署配置:
 
     {
+        "type": "add",  # add/remove
         "app_info": {
             "name": "name",
             "image": "image",
