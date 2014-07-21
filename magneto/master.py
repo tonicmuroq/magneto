@@ -3,41 +3,30 @@
 import gevent
 import redis
 import json
+import websocket
 
+from tornado import ioloop, web, websocket as twebsocket
 
-class Master(object):
+clients = {}
 
-    def __init__(self, channel, workers=[], **redis_config):
-        self.workers = []
-        self.redis = redis.Redis(redis_config)
-        self.channel = channel
+class MasterHandler(twebsocket.WebSocketHandler):
 
-    def register(self, worker):
-        self.workers.append(worker)
+    def __init__(self, url):
+        self.url = url
 
     def run(self):
-        gevent.joinall([
-            gevent.spawn(self._dispatch_task),
-            gevent.spawn(self._restart_nginx),
-        ])
+        ws = websocket.WebSocketApp(self.url,
+                on_message=self.on_message)
+        ws.run_forever()
 
-    def _dispatch_task(self):
-        while 1:
-            job = self.redis.lpop(self.channel)
-            if job is None:
-                gevent.sleep(1)
-            
-            r = json.loads(job)
-            host = r['host']
-            if host in self.workers:
-                self.redis.lpush(host, job)
-
-    def _restart_nginx(self):
-        while 1:
-            job = self.redis.lpop('restart-nginx')
-            if job is None:
-                gevent.sleep(1)
-            # restart nginx
+    def on_message(self, ws, data):
+        d = json.loads(data)
+        if d['type'] in ('add', 'remove'):
+            conn = self.slaves.get(d['app_info']['host'], None)
+            if conn:
+                conn.send(data)
+        elif d['type'] == 'restart-nginx':
+            restart_nginx()
 
 
 def dispatch_task(tasks):

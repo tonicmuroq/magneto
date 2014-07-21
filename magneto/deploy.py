@@ -25,11 +25,6 @@ from magneto.utils.decorators import docker_alive
             "name": "name",
             "image": "image",
             "version": "version",
-            "containers": [
-                "10.1.201.16:49155",
-                "10.1.201.16:49157",
-                "10.1.201.16:49158",
-            ],
             "port": port,
             "host": host,
             "container_id": container_id, // stop/restart/remove

@@ -1,13 +1,15 @@
 # coding: utf-8
 
-from docker import Client
+import docker
+import json
+import websocket
 
 from magneto.nginx import update_nginx
-from magneto.utils.docker import get_containers_port_of_app
+from magneto.utils.ddocker import get_containers_port_of_app
 from magneto.utils.decorators import docker_alive
 
 
-client = Client()
+client = docker.Client()
 host = '' # 本机的对外地址
 
 
@@ -34,7 +36,8 @@ def remove_all(app, deploy_configs):
 
     for deploy_config in deploy_configs:
         app_info = deploy_config['app_info']
-        cs = app_info.get('containers', [])
+        ports = get_containers_port_of_app(app)
+        cs = ['%s:%s' % (host, p) for p in ports]
         removed_container = '{host}:{port}'.format(**app_info)
 
         containers.update(set(cs))
@@ -100,3 +103,46 @@ def restart_container(container_id):
 def remove_container(container_id):
     client.remove_container(container_id) # should -v -l be flagged?
     return True
+
+
+class WrappedWebSocketApp(websocket.WebSocketApp):
+
+    def recv(self):
+        return self.sock.recv()
+
+
+class Worker(object):
+
+    def __init__(self, master):
+        self.master = master
+
+    def on_message(self, ws, message):
+        data = json.loads(message)
+        type_ = data['type']
+        if type_ == 'ping':
+            ws.send('pong')
+        if type_ == 'add':
+            deploy_all([data, ])
+            ws.send('done')
+        if type_ == 'remove':
+            remove_all([data, ])
+            ws.send('done')
+            
+    def on_error(self, ws, error):
+        pass
+    
+    def on_open(self, ws):
+        ws.send('ping')
+        data = ws.recv()
+        print data
+    
+    def on_close(self, ws):
+        ws.send('close')
+
+    def run(self, enable_trace=False):
+        ws = WrappedWebSocketApp(self.master,
+                on_open=self.on_open,
+                on_message=self.on_message,
+                on_error=self.on_error,
+                on_close=self.on_close)
+        ws.run_forever()
