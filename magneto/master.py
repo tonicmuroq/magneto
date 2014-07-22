@@ -1,56 +1,85 @@
 # coding: utf-8
 
-import gevent
-import redis
 import json
-import websocket
+import uuid
+from datetime import datetime, timedelta
 
-from tornado import ioloop, web, websocket as twebsocket
+from tornado import ioloop, web, websocket
 
+INTERVAL = 5
 clients = {}
+health_timestamp = {}
+task_wait = {}
 
-class MasterHandler(twebsocket.WebSocketHandler):
+class MasterHandler(websocket.WebSocketHandler):
 
-    def __init__(self, url):
-        self.url = url
+    def __init__(self, *args, **kwargs):
+        super(websocket.WebSocketHandler, self).__init__(*args, **kwargs)
+        self.host = ''
 
-    def run(self):
-        ws = websocket.WebSocketApp(self.url,
-                on_message=self.on_message)
-        ws.run_forever()
+    def open(self, *args):
+        self.host = self.get_argument('host')
+        self.stream.set_nodelay(True)
+        clients[self.host] = self
 
     def on_message(self, ws, data):
         d = json.loads(data)
-        if d['type'] in ('add', 'remove'):
-            conn = self.slaves.get(d['app_info']['host'], None)
-            if conn:
-                conn.send(data)
-        elif d['type'] == 'restart-nginx':
-            restart_nginx()
+        if d['type'] == 'done' and d['id'] in task_wait:
+            del task_wait[d['id']]
+            # task done
+            # reload nginx, etc.
+        else:
+            # others
+            pass
+
+    def on_pong(self, data):
+        if data == self.host:
+            health_timestamp[self.host] = datetime.now()
+        else:
+            print 'not valid pong'
+
+    def on_close(self):
+        if self.host in clients:
+            del clients[self.host]
+
+
+def ping_clients():
+    for host, last_check_timestamp in health_timestamp.iteritems():
+        if datetime.now() - last_check_timestamp > timedelta(seconds=2*INTERVAL):
+            print '%s is disconnected' % host
+
+    for host, client in clients.iteritems():
+        client.ping(bytes(host))
 
 
 def dispatch_task(tasks):
     deploys = {}
     tasks = [json.loads(t) for t in tasks]
 
-    # step1. 按照部署目的地分组
     for task in tasks:
-        app_info = task['app_info']
-        deploy_dest = '{host}:{port}'.format(**app_info)
-        deploys.setdefault(deploy_dest, []).append(task)
+        name = task['name']
+        host = task['host']
+        deploys.setdefault((name, host), []).append(task)
     
-    # step2. 对每个部署节点上按照app分组
-    # 分发出去任务
-    for deploy_dest, deploy_configs in deploys.iteritems():
-        configs = {}
-        for deploy_config in deploy_configs:
-            app_info = deploy_config['app_info']
-            app = app_info['name']
-            configs.setdefault(app, []).append(deploy_config)
-        
-        for app, dconfig in configs.iteritems():
-            dispatch_tasks_to_node(deploy_dest, app, dconfig)
-        
+    for (name, host), task_list in deploys.iteritems():
+        task_id = str(uuid.uuid4())
+        chat = {
+            'name': name,
+            'id': task_id,
+            'tasks': task_list,
+        }
+        client = clients.get(host, None)
+        if client:
+            client.write_message(json.dumps(chat))
+            task_wait[task_id] = 1
 
-def dispatch_tasks_to_node(node, app, tasks):
-    pass
+
+app = web.Application([
+    (r'/ws', MasterHandler),
+])
+app.listen(8881)
+instance = ioloop.IOLoop.instance()
+heartbeat = ioloop.PeriodicCallback(ping_clients, 1000*INTERVAL, io_loop=instance)
+
+heartbeat.start()
+instance.start()
