@@ -22,7 +22,7 @@ class MasterHandler(websocket.WebSocketHandler):
         self.stream.set_nodelay(True)
         clients[self.host] = self
 
-    def on_message(self, ws, data):
+    def on_message(self, data):
         d = json.loads(data)
         if d['type'] == 'done' and d['id'] in task_wait:
             del task_wait[d['id']]
