@@ -3,13 +3,18 @@
 import json
 import uuid
 from datetime import datetime, timedelta
+from Queue import Queue
 
 from tornado import ioloop, web, websocket
+from websocket import create_connection
 
 INTERVAL = 5
 clients = {}
 health_timestamp = {}
 task_wait = {}
+
+ws = create_connection('ws://localhost:8882/ws')
+local_task_queue = Queue(maxsize=15)
 
 class MasterHandler(websocket.WebSocketHandler):
 
@@ -72,6 +77,31 @@ def dispatch_task(tasks):
         if client:
             client.write_message(json.dumps(chat))
             task_wait[task_id] = 1
+        else:
+            print '%s not registered, maybe problem occurred?' % host
+
+
+def receive_tasks():
+    while 1:
+        # full, dispatch
+        if local_task_queue.full():
+            dispatch_task(_deal_queue(local_task_queue))
+
+        # 假设现在只发task
+        task = ws.recv()
+        local_task_queue.put(task)        
+
+
+def check_local_task_queue():
+    _deal_queue(local_task_queue)
+
+
+def _deal_queue(queue):
+    tasks = []
+    while not queue.full():
+        tasks.append(queue.get())
+    return tasks
+
 
 
 app = web.Application([
@@ -80,6 +110,8 @@ app = web.Application([
 app.listen(8881)
 instance = ioloop.IOLoop.instance()
 heartbeat = ioloop.PeriodicCallback(ping_clients, 1000*INTERVAL, io_loop=instance)
+check_queue = ioloop.PeriodicCallback(check_local_task_queue, 3000*INTERVAL, io_loop=instance)
 
 heartbeat.start()
+check_queue.start()
 instance.start()
