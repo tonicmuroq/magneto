@@ -28,15 +28,21 @@ class MasterHandler(websocket.WebSocketHandler):
         self.host = self.get_argument('host')
         self.stream.set_nodelay(True)
         clients[self.host] = self
+        task_wait[self.host] = {}
         print 'new host %s registered' % self.host
 
     def on_message(self, data):
         d = json.loads(data)
-        if d['type'] == 'done' and d['id'] in task_wait:
-            del task_wait[d['id']]
+        if d['type'] == 'done':
             # task done
             # reload nginx, etc.
-            print 'all tasks done'
+            host = d['host']
+            tasks = task_wait[host]
+            tasks.pop(d['id'], None)
+            if not tasks:
+                print 'all tasks on %s done' % host
+            else:
+                print '%s tasks remaining on %s' % (len(tasks), host)
         else:
             # others
             pass
@@ -84,7 +90,7 @@ def dispatch_task(tasks):
         client = clients.get(host, None)
         if client:
             client.write_message(json.dumps(chat))
-            task_wait[task_id] = 1
+            task_wait[host][task_id] = 1
             print 'task sent to %s' % host
         else:
             print '%s not registered, maybe problem occurred?' % host

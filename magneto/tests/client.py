@@ -26,7 +26,7 @@ def run_client():
         sleep(time)
         print 'task %s done, task count %s' % (chat_id, len(chat['tasks']))
 
-        payload = dict(type='done', id=chat_id)
+        payload = dict(type='done', id=chat_id, host=host)
         ws.send(json.dumps(payload))
 
 
