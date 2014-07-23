@@ -12,3 +12,13 @@ def docker_alive(client, fail_retval=False):
             return f(*a, **kw)
         return _
     return _docker_alive
+
+
+def redis_lock(redis, name, timeout=None, sleep=0.1):
+    def _redis_lock(f):
+        @wraps(f)
+        def _(*args, **kwargs):
+            with redis.lock(name, timeout, sleep):
+                return f(*args, **kwargs)
+        return _
+    return _redis_lock
