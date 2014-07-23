@@ -20,15 +20,11 @@ from magneto.utils.decorators import docker_alive
 部署配置:
 
     {
+        "type": "add",  # add/remove
         "app_info": {
             "name": "name",
             "image": "image",
             "version": "version",
-            "containers": [
-                "10.1.201.16:49155",
-                "10.1.201.16:49157",
-                "10.1.201.16:49158",
-            ],
             "port": port,
             "host": host,
             "container_id": container_id, // stop/restart/remove
