@@ -16,7 +16,7 @@ task_wait = {}
 _lock = threading.Lock()
 
 ws = create_connection('ws://localhost:8882/ws')
-local_task_queue = Queue(maxsize=15)
+local_task_queue = Queue(maxsize=100)
 
 class MasterHandler(websocket.WebSocketHandler):
 
@@ -28,6 +28,7 @@ class MasterHandler(websocket.WebSocketHandler):
         self.host = self.get_argument('host')
         self.stream.set_nodelay(True)
         clients[self.host] = self
+        print 'new host %s registered' % self.host
 
     def on_message(self, data):
         d = json.loads(data)
@@ -35,6 +36,7 @@ class MasterHandler(websocket.WebSocketHandler):
             del task_wait[d['id']]
             # task done
             # reload nginx, etc.
+            print 'all tasks done'
         else:
             # others
             pass
@@ -60,8 +62,10 @@ def ping_clients():
 
 
 def dispatch_task(tasks):
+    if not clients:
+        return
 
-    _lock.acquire()
+    #with _lock:
     deploys = {}
     tasks = [json.loads(t) for t in tasks]
 
@@ -81,9 +85,9 @@ def dispatch_task(tasks):
         if client:
             client.write_message(json.dumps(chat))
             task_wait[task_id] = 1
+            print 'task sent to %s' % host
         else:
             print '%s not registered, maybe problem occurred?' % host
-    _lock.release()
 
 
 def receive_tasks():
@@ -98,12 +102,14 @@ def receive_tasks():
 
 
 def check_local_task_queue():
+    #with _lock:
+    print 'time check'
     dispatch_task(_deal_queue(local_task_queue))
 
 
 def _deal_queue(queue):
     tasks = []
-    while not queue.full():
+    while not queue.empty():
         tasks.append(queue.get())
     return tasks
 
@@ -113,10 +119,15 @@ app = web.Application([
     (r'/ws', MasterHandler),
 ])
 app.listen(8881)
+
 instance = ioloop.IOLoop.instance()
 heartbeat = ioloop.PeriodicCallback(ping_clients, 1000*INTERVAL, io_loop=instance)
 check_queue = ioloop.PeriodicCallback(check_local_task_queue, 3000*INTERVAL, io_loop=instance)
 
+receive = threading.Thread(target=receive_tasks)
+receive.daemon = True
+
 heartbeat.start()
 check_queue.start()
+receive.start()
 instance.start()
