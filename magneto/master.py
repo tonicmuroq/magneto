@@ -2,6 +2,7 @@
 
 import json
 import uuid
+import threading
 from datetime import datetime, timedelta
 from Queue import Queue
 
@@ -12,6 +13,7 @@ INTERVAL = 5
 clients = {}
 health_timestamp = {}
 task_wait = {}
+_lock = threading.Lock()
 
 ws = create_connection('ws://localhost:8882/ws')
 local_task_queue = Queue(maxsize=15)
@@ -58,6 +60,8 @@ def ping_clients():
 
 
 def dispatch_task(tasks):
+
+    _lock.acquire()
     deploys = {}
     tasks = [json.loads(t) for t in tasks]
 
@@ -79,6 +83,7 @@ def dispatch_task(tasks):
             task_wait[task_id] = 1
         else:
             print '%s not registered, maybe problem occurred?' % host
+    _lock.release()
 
 
 def receive_tasks():
@@ -93,7 +98,7 @@ def receive_tasks():
 
 
 def check_local_task_queue():
-    _deal_queue(local_task_queue)
+    dispatch_task(_deal_queue(local_task_queue))
 
 
 def _deal_queue(queue):
