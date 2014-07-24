@@ -17,3 +17,7 @@ class Application(Base):
         app = cls(name=name, version=version)
         session.add(app)
         session.commit()
+
+    @classmethod
+    def get_by_name(cls, name):
+        return session.query(cls).filter(cls.name == name).first()

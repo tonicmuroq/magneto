@@ -4,6 +4,7 @@ import threading
 
 from tornado import web, ioloop
 
+from magneto.models import create_tables
 from magneto.master import (
     MasterHandler,
     ping_clients,
@@ -11,6 +12,7 @@ from magneto.master import (
     receive_tasks,
 )
 
+create_tables()
 
 HANDLERS = [
     (r'/ws', MasterHandler),

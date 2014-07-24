@@ -12,6 +12,9 @@ from tornado import websocket
 from websocket import create_connection
 
 from magneto.libs.store import rds
+from magneto.models.task import Task
+from magneto.models.application import Application
+from magneto.models.host import Host
 
 logger = logging.getLogger('deploy-master')
 logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -42,14 +45,21 @@ class MasterHandler(websocket.WebSocketHandler):
         logger.info('new host %s registered', self.host)
 
     def on_message(self, data):
-        d = json.loads(data)
-        if d['type'] == 'done':
+        rep  = json.loads(data)
+        if isinstance(rep, dict):
             # task done
             # reload nginx, etc.
             tasks = task_wait[self.host]
-            tasks.pop(d['id'], None)
+            
+            # update database
+            for uuid_, res_list in rep.iteritems():
+                tasks.pop(uuid_, None)
+                Task.update_multi_status(uuid_, res_list)
+
+        elif isinstance(rep, list):
+            # container status
+            pass
         else:
-            # others
             pass
 
         # 这次任务全部完成, 重启nginx
@@ -109,6 +119,12 @@ def dispatch_task(tasks):
             'type': type_,
             'tasks': task_list,
         }
+
+        # save tasks
+        app = Application.get_by_name(name)
+        host = Host.get_by_ip(host)
+        Task.create_multi(task_id, app.id, type_, host.id, task_list)
+
         client = clients.get(host, None)
         if client:
             client.write_message(json.dumps(chat))

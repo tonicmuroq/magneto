@@ -17,3 +17,7 @@ class Host(Base):
         host = cls(ip=ip, name=name)
         session.add(host)
         session.commit()
+
+    @classmethod
+    def get_by_ip(cls, ip):
+        return session.query(cls).filter(cls.ip == ip).first()
