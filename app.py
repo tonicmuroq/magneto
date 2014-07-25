@@ -4,7 +4,7 @@ import threading
 
 from tornado import web, ioloop
 
-from magneto.models import create_tables
+from magneto.models import create_tables, create_data
 from magneto.master import (
     MasterHandler,
     ping_clients,

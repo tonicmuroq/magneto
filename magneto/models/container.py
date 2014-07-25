@@ -34,3 +34,7 @@ class Container(Base):
         rds.set(self.__status_key__ % self.id, json.dumps(status))
 
     status = property(_get_status, _set_status)
+
+    def delete(self):
+        session.delete(self)
+        session.commit()

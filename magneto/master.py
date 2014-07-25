@@ -18,6 +18,7 @@ from magneto.models.application import Application
 from magneto.models.host import Host
 
 logger = logging.getLogger('deploy-master')
+logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 clients = {}
@@ -55,7 +56,22 @@ class MasterHandler(websocket.WebSocketHandler):
             # update database
             for uuid_, res_list in rep.iteritems():
                 tasks.pop(uuid_, None)
-                Task.update_multi_status(uuid_, res_list)
+                ts = Task.get_by_uuid(uuid_)
+                for t, rs in zip(ts, res_list):
+                    if t.type == 'add':
+                        Container.create(rs, t.host_id, t.app_id)
+                        t.done()
+                    elif t.type == 'remove':
+                        if rs:
+                            c = Container.get_by_cid(t.cid)
+                            c.delete()
+                        t.done()
+                    elif t.type == 'update':
+                        if rs:
+                            c = Container.get_by_cid(t.cid)
+                            c.delete()
+                            Container.create(rs, t.host_id, t.app_id)
+                        t.done()
 
         elif isinstance(rep, list):
             for status in rep:
@@ -63,8 +79,6 @@ class MasterHandler(websocket.WebSocketHandler):
                 container = Container.get_by_cid(cid)
                 if container:
                     container.status = status
-        else:
-            pass
 
         # 这次任务全部完成, 重启nginx
         if check_tasks_wait():
@@ -124,11 +138,12 @@ def dispatch_task(tasks):
             'tasks': task_list,
         }
 
-        host = Host.get_by_ip(host)
+        ohost = Host.get_by_ip(host)
         # save tasks
         for seq_id, task in enumerate(task_list):
             app = Application.get_by_name_and_version(name, task['version'])
-            Task.create(task_id, seq_id, type_, app.id, host.id)
+            cid = task['container'] if type_ in ('remove', 'update') else ''
+            Task.create(task_id, seq_id, type_, app.id, ohost.id, cid)
 
         client = clients.get(host, None)
         if client:
