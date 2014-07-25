@@ -1,6 +1,7 @@
 # coding: utf-8
 
 from sqlalchemy.ext.declarative import declarative_base
+import sqlalchemy.exc.IntegrityError as IntegrityError
 
 from magneto.libs.store import engine
 

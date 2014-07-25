@@ -3,10 +3,11 @@
 import sqlalchemy as db
 
 from magneto.libs.store import session
-from magneto.models import Base
+from magneto.models import Base, IntegrityError
 
 
 class Host(Base):
+
     __tablename__ = 'host'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     ip = db.Column(db.String(50), nullable=False)
@@ -15,8 +16,13 @@ class Host(Base):
     @classmethod
     def create(cls, ip, name=''):
         host = cls(ip=ip, name=name)
-        session.add(host)
-        session.commit()
+        try:
+            session.add(host)
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            return None
+        return host
 
     @classmethod
     def get_by_ip(cls, ip):

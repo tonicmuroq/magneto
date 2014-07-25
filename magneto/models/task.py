@@ -3,7 +3,7 @@
 import sqlalchemy as db
 
 from magneto.libs.store import session
-from magneto.models import Base
+from magneto.models import Base, IntegrityError
 
 
 class Task(Base):
@@ -21,20 +21,13 @@ class Task(Base):
     def create(cls, uuid, seq_id, type, app_id, host_id, cid=''):
         task = cls(uuid=uuid, seq_id=seq_id, type=type,
                 app_id=app_id, host_id=host_id, cid=cid)
-        session.add(task)
-        session.commit()
-
-    @classmethod
-    def update_multi_status(cls, uuid, status_list):
-        tasks = session.query(cls).filter(cls.uuid == uuid).\
-                order_by(cls.seq_id).all()
-        # TODO: error
-        if len(tasks) != len(status_list):
-            return
-        # 一次提交
-        for task, status in zip(tasks, status_list):
-            task.status = status
-        session.commit()
+        try:
+            session.add(task)
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            return None
+        return task
 
     @classmethod
     def get_by_uuid(cls, uuid):
