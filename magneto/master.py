@@ -144,6 +144,7 @@ def dispatch_task(tasks):
             app = Application.get_by_name_and_version(name, task['version'])
             cid = task['container'] if type_ in ('remove', 'update') else ''
             Task.create(task_id, seq_id, type_, app.id, ohost.id, cid)
+            task['config'] = app.config
 
         client = clients.get(host, None)
         if client:
