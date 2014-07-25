@@ -23,9 +23,14 @@ class Task(Base):
         session.commit()
 
     @classmethod
-    def create_multi(cls, uuid, app_id, type, host_id, tasks):
+    def create_multi(cls, uuid, name, version, type, host, tasks):
+        from magneto.models.application import Application
+        from magneto.models.host import Host
+        host = Host.get_by_ip(host)
         for seq_id, task in enumerate(tasks):
-            cls.create(uuid, seq_id, type, app_id, host_id)
+            app = Application.get_by_name_and_version(name, version)
+            if app:
+                cls.create(uuid, seq_id, type, app.id, host.id)
 
     @classmethod
     def update_multi_status(cls, uuid, status_list):

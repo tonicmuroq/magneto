@@ -13,6 +13,7 @@ from websocket import create_connection
 
 from magneto.libs.store import rds
 from magneto.models.task import Task
+from magneto.models.container import Container
 from magneto.models.application import Application
 from magneto.models.host import Host
 
@@ -57,8 +58,11 @@ class MasterHandler(websocket.WebSocketHandler):
                 Task.update_multi_status(uuid_, res_list)
 
         elif isinstance(rep, list):
-            # container status
-            pass
+            for status in rep:
+                cid = status['Id']
+                container = Container.get_by_cid(cid)
+                if container:
+                    container.status = status
         else:
             pass
 
@@ -120,10 +124,11 @@ def dispatch_task(tasks):
             'tasks': task_list,
         }
 
-        # save tasks
-        app = Application.get_by_name(name)
         host = Host.get_by_ip(host)
-        Task.create_multi(task_id, app.id, type_, host.id, task_list)
+        # save tasks
+        for seq_id, task in enumerate(task_list):
+            app = Application.get_by_name_and_version(name, task['version'])
+            Task.create(task_id, seq_id, type_, app.id, host.id)
 
         client = clients.get(host, None)
         if client:

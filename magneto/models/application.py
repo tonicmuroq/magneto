@@ -19,5 +19,9 @@ class Application(Base):
         session.commit()
 
     @classmethod
-    def get_by_name(cls, name):
-        return session.query(cls).filter(cls.name == name).first()
+    def get_multi_by_name(cls, name):
+        return session.query(cls).filter(cls.name == name).all()
+
+    @classmethod
+    def get_by_name_and_version(cls, name, version):
+        return session.query(cls).filter(cls.name == name).filter(cls.version == version).one()
