@@ -1,8 +1,9 @@
 # coding: utf-8
 
+import json
 import sqlalchemy as db
 
-from magneto.libs.store import session
+from magneto.libs.store import session, rds
 from magneto.models import Base, IntegrityError
 
 
@@ -17,8 +18,10 @@ class Task(Base):
     host_id = db.Column(db.Integer, nullable=False)
     cid = db.Column(db.String(50), nullable=False, default='')
 
+    config_key = 'task:%s:config'
+
     @classmethod
-    def create(cls, uuid, seq_id, type, app_id, host_id, cid=''):
+    def create(cls, uuid, seq_id, type, app_id, host_id, cid='', config={}):
         task = cls(uuid=uuid, seq_id=seq_id, type=type,
                 app_id=app_id, host_id=host_id, cid=cid)
         try:
@@ -27,6 +30,7 @@ class Task(Base):
         except IntegrityError:
             session.rollback()
             return None
+        task.config = config
         return task
 
     @classmethod
@@ -34,7 +38,63 @@ class Task(Base):
         return session.query(cls).filter(cls.uuid == uuid).\
                 order_by(cls.seq_id).all()
 
+    def _get_config(self):
+        config = rds.get(self.config_key % self.id)
+        return json.loads(config)
+    def _set_config(self, config):
+        rds.set(self.config_key % self.id, json.dumps(config))
+    config = property(_get_config, _set_config)
+
     def done(self):
         self.status = 1
         session.add(self)
         session.commit()
+
+
+def task_add_container(app, host):
+    from magneto.models.container import get_one_port_from_host
+    port = get_one_port_from_host(host.id)
+
+    task = {
+        'name': app.name,
+        'version': app.version,
+        'port': app.port,
+        'host': host.ip,
+        'type': 1,
+        'uid': '', # TODO 分配uid
+        'bind': port,
+        'memory': 65536,
+        'cpus': 0.8,
+        'config': app.config,
+    }
+    return task
+
+
+def task_remove_container(container):
+    task = {
+        'name': container.app.name,
+        'host': container.host.ip,
+        'type': 2,
+        'container': container.cid,
+    }
+    return task
+
+
+def task_update_container(container, app):
+    from magneto.models.container import get_one_port_from_host
+    port = get_one_port_from_host(container.host.id)
+
+    task = {
+        'name': app.name,
+        'uid': '', # TODO 分配uid
+        'type': 3,
+        'port': app.port,
+        'host': container.host.ip,
+        'bind': port,
+        'memory': 65536,
+        'cpus': 0.8,
+        'config': app.config,
+        'version': app.version,
+        'container': container.cid,
+    }
+    return task

@@ -27,6 +27,7 @@ def get_service_config(service):
 class Application(Base):
 
     __tablename__ = 'application'
+    __table_args__ = db.UniqueConstraint('name', 'version', name='uk_name_version')
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(50), nullable=False)
     version = db.Column(db.String(50), nullable=False)
@@ -56,6 +57,10 @@ class Application(Base):
         return app
 
     @classmethod
+    def get(cls, id):
+        return session.query(cls).filter(cls.id == id).one()
+
+    @classmethod
     def get_multi_by_name(cls, name):
         return session.query(cls).filter(cls.name == name).all()
 
@@ -76,6 +81,14 @@ class Application(Base):
     def config(self):
         return json.loads(rds.get(self.gen_config_yaml_key % self.id))
 
+    @property
+    def entrypoint(self):
+        return self.app_yaml.get('entrypoint', '')
+
+    @property
+    def port(self):
+        return self.app_yaml.get('port', 5000)
+
     def gen_config_yaml(self):
         d = {}
         services = self.app_yaml.get('services', [])
@@ -85,4 +98,3 @@ class Application(Base):
             d.update({service: get_service_config(service)})
             config_yaml.update(d)
         rds.set(self.gen_config_yaml % self.id, json.dumps(config_yaml))
-    
