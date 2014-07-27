@@ -2,13 +2,16 @@
 
 import time
 import json
+import hashlib
+from datetime import datetime
 from random import choice
 from tornado import ioloop, web, websocket
 
 
 app_names = ['dalaran', 'icecrown', 'ulduar']
 hosts = ['10.1.201.16', '10.1.201.17']
-types = ['add', 'remove', 'update']
+#types = ['add', 'remove', 'update']
+types = [1,]
 
 
 def make_task():
@@ -21,7 +24,8 @@ def make_task():
         'memory': 65536,
         'cpus': 0.7,
         'entrypoint': 'gunicorn -c conf.py app:app',
-        'container': '123ewrqqwe21312',
+        'port': choice(range(49000, 50000)),
+        'container': hashlib.sha1(str(datetime.now())).hexdigest(),
     }
     return task
 

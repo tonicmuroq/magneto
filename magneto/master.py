@@ -19,7 +19,10 @@ from magneto.utils.queue import RedisBlockQueue
 
 logger = logging.getLogger('deploy-master')
 logger.setLevel(logging.INFO)
-logger.addHandler(logging.StreamHandler(sys.stdout))
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(logging.INFO)
+ch.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+logger.addHandler(ch)
 
 clients = {}
 health_timestamp = {}
@@ -57,15 +60,15 @@ class MasterHandler(websocket.WebSocketHandler):
                 tasks.pop(uuid_, None)
                 ts = Task.get_by_uuid(uuid_)
                 for t, rs in zip(ts, res_list):
-                    if t.type == 'add':
+                    if t.type == 1:
                         Container.create(rs, t.host_id, t.app_id, t.config['port'])
                         t.done()
-                    elif t.type == 'remove':
+                    elif t.type == 2:
                         if rs:
                             c = Container.get_by_cid(t.cid)
                             c.delete()
                         t.done()
-                    elif t.type == 'update':
+                    elif t.type == 3:
                         if rs:
                             c = Container.get_by_cid(t.cid)
                             c.delete()
@@ -75,7 +78,7 @@ class MasterHandler(websocket.WebSocketHandler):
         elif isinstance(rep, list):
             for status in rep:
                 cid = status['Id']
-                port = status['Ports']['PublicPort']
+                #port = status['Ports']['PublicPort']
                 container = Container.get_by_cid(cid)
                 if container:
                     container.status = status
@@ -142,7 +145,7 @@ def dispatch_task(tasks):
         # save tasks
         for seq_id, task in enumerate(task_list):
             app = Application.get_by_name_and_version(name, task['version'])
-            cid = task['container'] if type_ in ('remove', 'update') else ''
+            cid = task['container'] if type_ in (2, 3) else ''
             Task.create(task_id, seq_id, type_, app.id, ohost.id, cid, task)
 
         client = clients.get(host, None)
