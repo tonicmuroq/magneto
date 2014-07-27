@@ -4,7 +4,7 @@ import threading
 
 from tornado import web, ioloop
 
-from magneto.models import create_tables
+from magneto.models import create_tables, create_data
 from magneto.api import (
     GetAppAPIHandler,
     AddAppAPIHandler,
@@ -18,6 +18,7 @@ from magneto.master import (
 )
 
 create_tables()
+create_data()
 
 HANDLERS = [
     (r'/ws', MasterHandler),

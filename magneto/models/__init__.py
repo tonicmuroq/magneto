@@ -19,6 +19,6 @@ def create_data():
     Host.create('10.1.201.16', '16host')
     Host.create('10.1.201.17', '17host')
 
-    Application.create('dalaran', 'version')
-    Application.create('icecrown', 'version')
-    Application.create('ulduar', 'version')
+    Application.create('dalaran', 'version', '{"name": "app", "version": "version"}')
+    Application.create('icecrown', 'version', '{"name": "app", "version": "version"}')
+    Application.create('ulduar', 'version', '{"name": "app", "version": "version"}')

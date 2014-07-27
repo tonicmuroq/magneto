@@ -20,7 +20,8 @@ def make_task():
         'version': 'version',
         'memory': 65536,
         'cpus': 0.7,
-        'entrypoint': 'gunicorn -c conf.py app:app'
+        'entrypoint': 'gunicorn -c conf.py app:app',
+        'container': '123ewrqqwe21312',
     }
     return task
 

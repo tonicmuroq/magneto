@@ -27,7 +27,7 @@ def get_service_config(service):
 class Application(Base):
 
     __tablename__ = 'application'
-    __table_args__ = db.UniqueConstraint('name', 'version', name='uk_name_version')
+    __table_args__ = db.UniqueConstraint('name', 'version', name='uk_name_version'),
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(50), nullable=False)
     version = db.Column(db.String(50), nullable=False)
@@ -97,4 +97,4 @@ class Application(Base):
         for service in services:
             d.update({service: get_service_config(service)})
             config_yaml.update(d)
-        rds.set(self.gen_config_yaml % self.id, json.dumps(config_yaml))
+        rds.set(self.gen_config_yaml_key % self.id, json.dumps(config_yaml))
