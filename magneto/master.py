@@ -6,7 +6,6 @@ import uuid
 import time
 import logging
 from datetime import datetime, timedelta
-from Queue import Queue
 
 from tornado import websocket
 from websocket import create_connection
@@ -16,6 +15,7 @@ from magneto.models.task import Task
 from magneto.models.container import Container
 from magneto.models.application import Application
 from magneto.models.host import Host
+from magneto.utils.queue import RedisBlockQueue
 
 logger = logging.getLogger('deploy-master')
 logger.setLevel(logging.INFO)
@@ -26,9 +26,8 @@ health_timestamp = {}
 task_wait = {}
 
 _lock = rds.lock('dispatch-lock', timeout=115, sleep=5)
-
+local_task_queue = RedisBlockQueue('task_queue', 15, redis_instance=rds)
 ws = create_connection('ws://localhost:8882/ws')
-local_task_queue = Queue(maxsize=15)
 
 class MasterHandler(websocket.WebSocketHandler):
 
@@ -76,7 +75,7 @@ class MasterHandler(websocket.WebSocketHandler):
         elif isinstance(rep, list):
             for status in rep:
                 cid = status['Id']
-                port = Status['Ports']['PublicPort']
+                port = status['Ports']['PublicPort']
                 container = Container.get_by_cid(cid)
                 if container:
                     container.status = status
@@ -161,7 +160,7 @@ def receive_tasks():
             # still blocking, wait another 5 seconds
             if _lock.acquire(blocking=False):
                 logger.info('full check')
-                dispatch_task(_deal_queue(local_task_queue))
+                dispatch_task(local_task_queue.get_all())
             else:
                 logger.info('full check blocked')
                 time.sleep(5)
@@ -175,14 +174,7 @@ def check_local_task_queue():
     # if still blocking, do nothing
     if _lock.acquire(blocking=False):
         logger.info('time check')
-        dispatch_task(_deal_queue(local_task_queue))
+        dispatch_task(local_task_queue.get_all())
     else:
         logger.info('time check blocked')
     return
-
-
-def _deal_queue(queue):
-    tasks = []
-    while not queue.empty():
-        tasks.append(queue.get())
-    return tasks
