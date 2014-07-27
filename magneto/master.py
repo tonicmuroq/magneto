@@ -1,6 +1,5 @@
 # coding: utf-8
 
-import sys
 import json
 import uuid
 import time
@@ -11,18 +10,19 @@ from tornado import websocket
 from websocket import create_connection
 
 from magneto.libs.store import rds
+from magneto.libs.colorlog import ColorizingStreamHandler
+from magneto.libs.queue import RedisBlockQueue
+
 from magneto.models.task import Task
 from magneto.models.container import Container
 from magneto.models.application import Application
 from magneto.models.host import Host
-from magneto.utils.queue import RedisBlockQueue
 
-logger = logging.getLogger('deploy-master')
+logging.StreamHandler = ColorizingStreamHandler
+logging.BASIC_FORMAT = "%(asctime)s [%(name)s] %(message)s"
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-ch = logging.StreamHandler(sys.stdout)
-ch.setLevel(logging.INFO)
-ch.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-logger.addHandler(ch)
 
 clients = {}
 health_timestamp = {}
