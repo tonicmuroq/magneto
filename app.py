@@ -13,7 +13,7 @@ from magneto.api import (
 from magneto.master import (
     MasterHandler,
     ping_clients,
-    check_local_task_queue,
+    check_taskqueue,
     receive_tasks,
 )
 
@@ -31,7 +31,7 @@ app.listen(8881)
 
 instance = ioloop.IOLoop.instance()
 heartbeat = ioloop.PeriodicCallback(ping_clients, 15000, io_loop=instance)
-check_queue = ioloop.PeriodicCallback(check_local_task_queue, 25000, io_loop=instance)
+check_queue = ioloop.PeriodicCallback(check_taskqueue, 25000, io_loop=instance)
 
 receive = threading.Thread(target=receive_tasks)
 receive.daemon=True
