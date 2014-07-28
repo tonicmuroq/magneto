@@ -9,9 +9,8 @@ from datetime import datetime, timedelta
 from tornado import websocket
 from websocket import create_connection
 
-from magneto.libs.store import rds
+from magneto.libs.store import rds, taskqueue
 from magneto.libs.colorlog import ColorizingStreamHandler
-from magneto.libs.queue import RedisBlockQueue
 
 from magneto.models.task import Task
 from magneto.models.container import Container
@@ -29,7 +28,6 @@ health_timestamp = {}
 task_wait = {}
 
 _lock = rds.lock('dispatch-lock', timeout=115, sleep=5)
-local_task_queue = RedisBlockQueue('task_queue', 15, redis_instance=rds)
 ws = create_connection('ws://localhost:8882/ws')
 
 class MasterHandler(websocket.WebSocketHandler):
@@ -159,25 +157,25 @@ def dispatch_task(tasks):
 def receive_tasks():
     while 1:
         # full, dispatch
-        if local_task_queue.full():
+        if taskqueue.full():
             # still blocking, wait another 5 seconds
             if _lock.acquire(blocking=False):
                 logger.info('full check')
-                dispatch_task(local_task_queue.get_all())
+                dispatch_task(taskqueue.get_all())
             else:
                 logger.info('full check blocked')
                 time.sleep(5)
 
         # 假设现在只发task
         task = ws.recv()
-        local_task_queue.put(task)        
+        taskqueue.put(task)        
 
 
-def check_local_task_queue():
+def check_taskqueue():
     # if still blocking, do nothing
     if _lock.acquire(blocking=False):
         logger.info('time check')
-        dispatch_task(local_task_queue.get_all())
+        dispatch_task(taskqueue.get_all())
     else:
         logger.info('time check blocked')
     return

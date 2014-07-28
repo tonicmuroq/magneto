@@ -37,3 +37,12 @@ class AddHostAPIHandler(tornado.web.RequestHandler):
             self.write({'r': 1, 'msg': 'error'})
         else:
             self.write({'r': 0})
+
+
+class DeployAppAPIHandler(tornado.web.RequestHandler):
+
+    def post(self):
+        app = self.get_body_argument('app')
+        host = self.get_body_argument('host')
+        action = self.get_body_argument('action')
+
