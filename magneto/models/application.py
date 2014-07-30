@@ -8,23 +8,32 @@ import sqlalchemy as db
 from magneto.libs.store import session, rds
 from magneto.models import Base, IntegrityError
 from magneto.mysql import setup_mysql
+from magneto.config import MYSQL_CONFIG, REDIS_HOST, REDIS_PORT
 
 
-def get_service_config(service):
-    '''just example'''
-    if service == 'redis':
-        return {
-            'host': '192.168.1.120',
-            'port': 6379,
-        }
-    if service == 'mysql':
-        return {
-            'host': '192.168.1.153',
-            'port': 3306,
-            'username': 'root',
-            'password': '',
-        }
-    return {}
+def _redis_service(app):
+    # TODO 用真实的redis
+    return {
+        'host': REDIS_HOST,
+        'port': REDIS_PORT,
+    }
+
+
+def _mysql_service(app):
+    host = MYSQL_CONFIG['host']
+    port = MYSQL_CONFIG['port']
+    return {
+        'host': host,
+        'post': port,
+        'username': app.name,
+        'password': app.mysql_password,
+    }
+
+
+SERVICE_CONFIGS = {
+    'redis': _redis_service,
+    'mysql': _mysql_service,
+}
 
 
 class Application(Base):
@@ -121,7 +130,7 @@ class Application(Base):
         config_yaml = self.config_yaml.copy()
     
         for service in services:
-            d.update({service: get_service_config(service)})
+            d.update({service: SERVICE_CONFIGS.get(service, lambda app:{})(self)})
             config_yaml.update(d)
         rds.set(self.gen_config_yaml_key % self.id, json.dumps(config_yaml))
 

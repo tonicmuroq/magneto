@@ -6,6 +6,7 @@ MYSQL_CONFIG = {
     'passwd': 'mnjksghqFGeksh342ui',
     'host': '10.1.201.58',
     'db': 'sri',
+    'port': 3306,
 }
 DATABASE_URI = 'mysql://{user}:{passwd}@{host}/{db}'.format(**MYSQL_CONFIG)
 
