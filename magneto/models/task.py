@@ -53,6 +53,9 @@ class Task(Base):
 
 def task_add_container(app, host):
     from magneto.models.container import get_one_port_from_host
+    from magneto.models.user import add_user_for_app
+
+    user = add_user_for_app(app)
     port = get_one_port_from_host(host.id)
 
     task = {
@@ -61,7 +64,7 @@ def task_add_container(app, host):
         'port': app.port,
         'host': host.ip,
         'type': 1,
-        'uid': '', # TODO 分配uid
+        'uid': user.uid,
         'bind': port,
         'memory': 65536,
         'cpus': 0.8,
@@ -82,11 +85,14 @@ def task_remove_container(container):
 
 def task_update_container(container, app):
     from magneto.models.container import get_one_port_from_host
+    from magneto.models.user import add_user_for_app
+
+    user = add_user_for_app(app)
     port = get_one_port_from_host(container.host.id)
 
     task = {
         'name': app.name,
-        'uid': '', # TODO 分配uid
+        'uid': user.uid,
         'type': 3,
         'port': app.port,
         'host': container.host.ip,

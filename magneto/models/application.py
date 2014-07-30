@@ -31,6 +31,7 @@ class Application(Base):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(50), nullable=False)
     version = db.Column(db.String(50), nullable=False)
+    pname = db.Column(db.String(50), nullable=False)
 
     app_yaml_key = 'app:app_yaml:%s'
     config_yaml_key = 'app:config_yaml:%s'
@@ -43,7 +44,11 @@ class Application(Base):
         if not config_yaml:
             config_yaml = '{}'
 
-        app = cls(name=name, version=version)
+        # TODO appname hard code
+        app_yaml_dict = json.loads(app_yaml)
+        pname = app_yaml_dict.get('appname', name)
+
+        app = cls(name=name, version=version, pname=pname)
         try:
             session.add(app)
             session.commit()

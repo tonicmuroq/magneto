@@ -7,9 +7,8 @@ import logging
 from datetime import datetime, timedelta
 
 from tornado import websocket
-from websocket import create_connection
 
-from magneto.libs.store import rds, taskqueue
+from magneto.libs.store import taskqueue, tasklock
 from magneto.libs.colorlog import ColorizingStreamHandler
 
 from magneto.models.task import Task
@@ -27,8 +26,6 @@ clients = {}
 health_timestamp = {}
 task_wait = {}
 
-_lock = rds.lock('dispatch-lock', timeout=115, sleep=5)
-ws = create_connection('ws://localhost:8882/ws')
 
 class MasterHandler(websocket.WebSocketHandler):
 
@@ -37,8 +34,7 @@ class MasterHandler(websocket.WebSocketHandler):
         self.host = ''
 
     def open(self, *args):
-        self.host = self.get_argument('host')
-        # self.host = self.request.remote_ip
+        self.host = self.request.remote_ip
         self.stream.set_nodelay(True)
 
         clients[self.host] = self
@@ -72,8 +68,14 @@ class MasterHandler(websocket.WebSocketHandler):
                             c.delete()
                             Container.create(rs, t.host_id, t.app_id, t.config['port'])
                         t.done()
+            # 这次任务全部完成, 重启nginx
+            if check_tasks_wait():
+                logger.info('all tasks done')
+                tasklock.release()
+                restart_nginx()
 
         elif isinstance(rep, list):
+            # container 状态
             for status in rep:
                 cid = status['Id']
                 #port = status['Ports']['PublicPort']
@@ -81,16 +83,8 @@ class MasterHandler(websocket.WebSocketHandler):
                 if container:
                     container.status = status
 
-        # 这次任务全部完成, 重启nginx
-        if check_tasks_wait():
-            logger.info('all tasks done')
-            _lock.release()
-            restart_nginx()
-
     def on_pong(self, data):
-        # if self.request.remote_ip == self.host:
-        if data == self.host:
-            health_timestamp[self.host] = datetime.now()
+        health_timestamp[self.host] = datetime.now()
 
     def on_close(self):
         if self.host in clients:
@@ -154,26 +148,22 @@ def dispatch_task(tasks):
             logger.warn('%s not registered, maybe problem occurred?', host)
 
 
-def receive_tasks():
-    while 1:
-        # full, dispatch
-        if taskqueue.full():
-            # still blocking, wait another 5 seconds
-            if _lock.acquire(blocking=False):
+def put_task(task):
+    taskqueue.put(task)        
+    if taskqueue.full():
+        while 1:
+            if tasklock.acquire(blocking=False):
                 logger.info('full check')
                 dispatch_task(taskqueue.get_all())
+                break
             else:
                 logger.info('full check blocked')
                 time.sleep(5)
 
-        # 假设现在只发task
-        task = ws.recv()
-        taskqueue.put(task)        
 
 
 def check_taskqueue():
-    # if still blocking, do nothing
-    if _lock.acquire(blocking=False):
+    if tasklock.acquire(blocking=False):
         logger.info('time check')
         dispatch_task(taskqueue.get_all())
     else:

@@ -13,3 +13,4 @@ session = scoped_session(sessionmaker(bind=engine))
 
 rds = redis.Redis()
 taskqueue = RedisBlockQueue('taskqueue', 15, redis_instance=rds)
+tasklock = rds.lock('magneto:redis:tasklock', timeout=120, sleep=5)
