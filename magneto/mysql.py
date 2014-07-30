@@ -14,6 +14,7 @@ class MySQLSentinel(object):
         conf.setdefault('use_unicode', False)
         conf.setdefault('charset', 'utf8')
 
+        conf.pop('db', None)
         self._conn = MySQLdb.connect(**conf)
 
     def select_database(self, appname):

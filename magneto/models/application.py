@@ -64,7 +64,7 @@ class Application(Base):
         rds.set(app.config_yaml_key % app.id, config_yaml)
 
         app.gen_config_yaml()
-        app.setup_mysql()
+        app.setup_database()
 
         return app
 

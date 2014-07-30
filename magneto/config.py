@@ -3,7 +3,7 @@
 DEV = False
 MYSQL_CONFIG = {
     'user': 'platform_root',
-    'passwd': 'mghqFGeksh342ui',
+    'passwd': 'mnjksghqFGeksh342ui',
     'host': '10.1.201.58',
     'db': 'sri',
 }
