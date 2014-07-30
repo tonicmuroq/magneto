@@ -1,7 +1,5 @@
 # coding: utf-8
 
-import threading
-
 from tornado import web, ioloop
 
 from magneto.models import create_tables, create_data
@@ -14,7 +12,6 @@ from magneto.master import (
     MasterHandler,
     ping_clients,
     check_taskqueue,
-    receive_tasks,
 )
 
 create_tables()
@@ -33,8 +30,5 @@ instance = ioloop.IOLoop.instance()
 heartbeat = ioloop.PeriodicCallback(ping_clients, 15000, io_loop=instance)
 check_queue = ioloop.PeriodicCallback(check_taskqueue, 25000, io_loop=instance)
 
-receive = threading.Thread(target=receive_tasks)
-receive.daemon=True
-
-for ins in (heartbeat, check_queue, receive, instance):
+for ins in (heartbeat, check_queue, instance):
     ins.start()
