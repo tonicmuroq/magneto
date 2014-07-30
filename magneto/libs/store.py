@@ -7,11 +7,11 @@ from sqlalchemy.orm.scoping import scoped_session
 import redis
 
 from .queue import RedisBlockQueue
-from magneto.config import database_uri, redis_host, redis_port
+from magneto.config import DATABASE_URI, REDIS_HOST, REDIS_PORT
 
-engine = create_engine(database_uri)
+engine = create_engine(DATABASE_URI)
 session = scoped_session(sessionmaker(bind=engine))
 
-rds = redis.Redis(host=redis_host, port=redis_port)
+rds = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
 taskqueue = RedisBlockQueue('taskqueue', 15, redis_instance=rds)
 tasklock = rds.lock('magneto:redis:tasklock', timeout=120, sleep=5)

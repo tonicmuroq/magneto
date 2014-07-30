@@ -1,16 +1,18 @@
 # coding: utf-8
 
 DEV = False
-mysql_config = {
+MYSQL_CONFIG = {
     'user': 'platform_root',
     'passwd': 'mghqFGeksh342ui',
     'host': '10.1.201.58',
-    'database': 'sri',
+    'db': 'sri',
 }
-database_uri = 'mysql://{user}:{passwd}@{host}/{database}'.format(**mysql_config)
+DATABASE_URI = 'mysql://{user}:{passwd}@{host}/{db}'.format(**MYSQL_CONFIG)
 
-redis_host = '10.1.201.16'
-redis_port = 6379
+REDIS_HOST = '10.1.201.16'
+REDIS_PORT = 6379
+
+MYSQL_CONFIG_ROOT = '/etc/sri/mysql'
 
 try:
     from local_config import *
