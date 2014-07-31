@@ -17,6 +17,8 @@ from magneto.master import (
     check_taskqueue,
 )
 
+from magneto.config import APP_PORT
+
 create_tables()
 
 HANDLERS = [
@@ -30,7 +32,7 @@ HANDLERS = [
 ]
 
 app = web.Application(HANDLERS)
-app.listen(8881)
+app.listen(APP_PORT)
 
 instance = ioloop.IOLoop.instance()
 heartbeat = ioloop.PeriodicCallback(ping_clients, 15000, io_loop=instance)

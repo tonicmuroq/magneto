@@ -14,6 +14,8 @@ REDIS_PORT = 6379
 
 MYSQL_CONFIG_ROOT = '/etc/sri/mysql'
 
+APP_PORT = 8881
+
 try:
     from local_config import *
 except ImportError:
