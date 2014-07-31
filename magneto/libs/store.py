@@ -2,7 +2,10 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.scoping import scoped_session
+try:
+    from sqlalchemy.orm.scoping import scoped_session
+except ImportError:
+    from sqlalchemy.orm.scoping import ScopedSession as scoped_session
 
 import redis
 
