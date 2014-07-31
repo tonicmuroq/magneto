@@ -60,9 +60,9 @@ class Application(Base):
 
         # TODO appname hard code
         app_yaml_dict = json.loads(app_yaml)
-        pname = app_yaml_dict.get('appname', name)
+        aname = app_yaml_dict.get('appname', name)
 
-        app = cls(name=name, version=version, pname=pname)
+        app = cls(name=aname, version=version, pname=name)
         try:
             session.add(app)
             session.commit()

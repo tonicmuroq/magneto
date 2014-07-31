@@ -25,8 +25,8 @@ class GetAppAPIHandler(tornado.web.RequestHandler):
 class AddAppAPIHandler(tornado.web.RequestHandler):
 
     def post(self):
-        name = self.get_body_argument('app_name')
-        version = self.get_body_argument('app_version')
+        name = self.get_body_argument('name')
+        version = self.get_body_argument('version')
         app_yaml = self.get_body_argument('app_yaml')
         config_yaml = self.get_body_argument('config_yaml', default=None)
         Application.create(name, version, app_yaml, config_yaml)
