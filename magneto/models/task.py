@@ -68,7 +68,7 @@ def task_add_container(app, host):
         'uid': user.uid,
         'bind': port,
         'memory': 65536,
-        'cpus': 0.8,
+        'cpus': 100,
         'config': app.config,
     }
     return task
@@ -100,7 +100,7 @@ def task_update_container(container, app):
         'cmd': app.cmd,
         'bind': port,
         'memory': 65536,
-        'cpus': 0.8,
+        'cpus': 100,
         'config': app.config,
         'version': app.version,
         'container': container.cid,
