@@ -74,7 +74,7 @@ class Container(Base):
 
 def dispatch_ports_on_host(host_id, count, port_range=DEFAULT_PORT_RANGE):
     with rds.lock(_HOST_PORTS_LOCK % host_id, timeout=10, sleep=2):
-        aps = {i for i in xrange(*DEFAULT_PORT_RANGE)}
+        aps = set([i for i in xrange(*DEFAULT_PORT_RANGE)])
         cps = rds.smembers(_HOST_PORTS_KEY % host_id)
         rs = sample(aps - cps, count)
         rds.sadd(_HOST_PORTS_KEY % host_id, *rs)
