@@ -79,7 +79,7 @@ class Application(Base):
 
     @classmethod
     def get(cls, id):
-        return session.query(cls).filter(cls.id == id).one()
+        return session.query(cls).filter(cls.id == id).first()
 
     @classmethod
     def get_multi_by_name(cls, name):
@@ -88,7 +88,7 @@ class Application(Base):
     @classmethod
     def get_by_name_and_version(cls, name, version):
         return session.query(cls).filter(cls.name == name).\
-                filter(cls.version == version).one()
+                filter(cls.version == version).first()
 
     @property
     def app_yaml(self):

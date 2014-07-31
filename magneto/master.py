@@ -112,7 +112,9 @@ def ping_clients():
 
 
 def dispatch_task(tasks):
-    if not clients:
+    logger.info(tasks)
+    if not clients or not tasks:
+        tasklock.release()
         return
 
     deploys = {}

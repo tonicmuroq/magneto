@@ -18,7 +18,6 @@ from magneto.master import (
 )
 
 create_tables()
-create_data()
 
 HANDLERS = [
     (r'/ws', MasterHandler),

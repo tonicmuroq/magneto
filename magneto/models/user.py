@@ -26,12 +26,12 @@ class User(Base):
 
     @classmethod
     def get_by_name(cls, name):
-        return session.query(cls).filter(cls.name == name).one()
+        return session.query(cls).filter(cls.name == name).first()
 
 
 def add_user_for_app(app):
     name = app.name
     user = User.get_by_name(name)
     if not user:
-        user = User.create(user, 'sri')
+        user = User.create(name, 'sri')
     return user

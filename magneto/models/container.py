@@ -38,7 +38,7 @@ class Container(Base):
 
     @classmethod
     def get_by_cid(cls, cid):
-        return session.query(cls).filter(cls.cid == cid).one()
+        return session.query(cls).filter(cls.cid == cid).first()
 
     @classmethod
     def get_multi_by_host(cls, host_id):
