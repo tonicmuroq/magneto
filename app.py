@@ -6,7 +6,10 @@ from magneto.models import create_tables, create_data
 from magneto.api import (
     GetAppAPIHandler,
     AddAppAPIHandler,
-    AddHostAPIHandler
+    AddHostAPIHandler,
+    DeployAppAPIHandler,
+    RemoveAppAPIHandler,
+    AppSchemaAPIHandler,
 )
 from magneto.master import (
     MasterHandler,
@@ -20,8 +23,11 @@ create_data()
 HANDLERS = [
     (r'/ws', MasterHandler),
     (r'/app/new', AddAppAPIHandler),
+    (r'/host/new', AddHostAPIHandler),
     (r'/app/(\w+)/(\w+)', GetAppAPIHandler),
-    (r'/host/add', AddHostAPIHandler),
+    (r'/app/(\w+)/(\w+)/deploy', DeployAppAPIHandler),
+    (r'/app/(\w+)/(\w+)/remote', RemoveAppAPIHandler),
+    (r'/app/(\w+)/(\w+)/schema', AppSchemaAPIHandler),
 ]
 
 app = web.Application(HANDLERS)

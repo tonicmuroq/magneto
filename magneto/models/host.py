@@ -31,3 +31,7 @@ class Host(Base):
     @classmethod
     def get(cls, id):
         return session.query(cls).filter(cls.id == id).one()
+
+    @classmethod
+    def get_multi_by_ip(cls, ips):
+        return [cls.get_by_ip(ip) for ip in ips]

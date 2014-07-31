@@ -44,6 +44,11 @@ class Container(Base):
     def get_multi_by_host(cls, host_id):
         return session.query(cls).filter(cls.host_id == host_id).all()
 
+    @classmethod
+    def get_multi_by_host_and_app(cls, host_id, app_id):
+        return session.query(cls).filter(cls.host_id == host_id).\
+                filter(cls.app_id == app_id).all()
+
     def _get_status(self):
         status = rds.get(self.status_key % self.id)
         return json.loads(status)

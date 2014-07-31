@@ -49,6 +49,7 @@ class Application(Base):
     config_yaml_key = 'app:config_yaml:%s'
     gen_config_yaml_key = 'app:gen_config_yaml:%s'
     app_mysql_key = 'app:mysql:dbkey:%s'
+    app_schema_key = 'app:schema:dbkey:%s'
 
     @classmethod
     def create(cls, name, version, app_yaml=None, config_yaml=None):
@@ -73,7 +74,6 @@ class Application(Base):
         rds.set(app.config_yaml_key % app.id, config_yaml)
 
         app.gen_config_yaml()
-        app.setup_database()
 
         return app
 
@@ -124,6 +124,12 @@ class Application(Base):
     def mysql_manager_password(self):
         return self._passwords[1]
 
+    def _get_schema(self):
+        return rds.get(self.app_schema_key % self.name)
+    def _set_schema(self, schema):
+        rds.set(self.app_schema_key % self.name, schema)
+    schema = property(_get_schema, _set_schema)
+
     def gen_config_yaml(self):
         d = {}
         services = self.app_yaml.get('services', [])
@@ -143,3 +149,7 @@ class Application(Base):
         setup_mysql(self.name, passwd, manager_passwd)
 
         rds.set(key, json.dumps([passwd, manager_passwd]))
+
+    def setup_schema(self):
+        pass
+

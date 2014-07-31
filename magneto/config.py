@@ -8,7 +8,6 @@ MYSQL_CONFIG = {
     'db': 'sri',
     'port': 3306,
 }
-DATABASE_URI = 'mysql://{user}:{passwd}@{host}/{db}'.format(**MYSQL_CONFIG)
 
 REDIS_HOST = '10.1.201.16'
 REDIS_PORT = 6379
@@ -19,3 +18,5 @@ try:
     from local_config import *
 except ImportError:
     pass
+
+DATABASE_URI = 'mysql://{user}:{passwd}@{host}/{db}'.format(**MYSQL_CONFIG)

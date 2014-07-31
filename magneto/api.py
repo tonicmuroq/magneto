@@ -1,13 +1,15 @@
 # coding: utf-8
 
 import tornado
+from cStringIO import StringIO
 
 from magneto.models.application import Application
 from magneto.models.host import Host 
-from magneto.models.container import Container
-from magneto.models.task import task_add_container, task_remove_container, task_update_container
 
-from magneto.master import put_task
+from magneto.helper import deploy_app_on_hosts, remove_app_from_hosts
+
+
+_OK_RESP = {'r': 0}
 
 
 class GetAppAPIHandler(tornado.web.RequestHandler):
@@ -28,7 +30,20 @@ class AddAppAPIHandler(tornado.web.RequestHandler):
         app_yaml = self.get_body_argument('app_yaml')
         config_yaml = self.get_body_argument('config_yaml', default=None)
         Application.create(name, version, app_yaml, config_yaml)
-        self.write({'r': 0})
+        self.write(_OK_RESP)
+
+
+class AppSchemaAPIHandler(tornado.web.RequestHandler):
+
+    def post(self, app_name, app_version):
+        app = Application.get_by_name_and_version(app_name, app_version)
+
+        f = self.request.files['schema'][0]
+        sio = StringIO()
+        sio.write(f['body'])
+        schema = sio.getvalue()
+        app.schema = schema
+        self.write(_OK_RESP)
 
 
 class AddHostAPIHandler(tornado.web.RequestHandler):
@@ -36,37 +51,29 @@ class AddHostAPIHandler(tornado.web.RequestHandler):
     def post(self):
         ip = self.get_body_argument('host')
         name = self.get_body_argument('name', default='')
-        host = Host.create(ip, name)
-        if not host:
-            self.write({'r': 1, 'msg': 'error'})
-        else:
-            self.write({'r': 0})
+        Host.create(ip, name)
+        self.write(_OK_RESP)
 
 
 class DeployAppAPIHandler(tornado.web.RequestHandler):
 
-    def post(self):
-        app = self.get_body_argument('app_id', '')
-        host = self.get_body_argument('host_id', '')
-        action = self.get_body_argument('action')
-        container = self.get_body_argument('container_id', '')
+    def post(self, app_name, app_version):
+        hosts = self.get_body_arguments('hosts')
+        hosts = Host.get_multi_by_ip(hosts)
 
-        app = Application.get(app)
-        host = Host.get(host)
+        app = Application.get_by_name_and_version(app_name, app_version)
+        app.setup_database()
 
-        if not (app and host):
-            self.write({'r': 1, 'msg': 'app/host missed'})
-        else:
-            if action == 'add':
-                task = task_add_container(app, host)
-            elif action == 'remove':
-                container = Container.get_by_cid(container)
-                task = task_remove_container(container)
-            elif action == 'update':
-                container = Container.get_by_cid(container)
-                task = task_update_container(container, app)
-            else:
-                task = {}
-            if task:
-                put_task(task)
-            self.write({'r': 0})
+        deploy_app_on_hosts(app, filter(None, hosts))
+        self.write(_OK_RESP)
+
+
+class RemoveAppAPIHandler(tornado.web.RequestHandler):
+
+    def post(self, app_name, app_version):
+        hosts = self.get_body_arguments('hosts')
+        hosts = Host.get_multi_by_ip(hosts)
+
+        app = Application.get_by_name_and_version(app_name, app_version)
+        remove_app_from_hosts(app, hosts)
+        self.write(_OK_RESP)

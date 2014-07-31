@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import json
 import redis
 
 
@@ -26,17 +27,24 @@ class RedisBlockQueue(object):
         return self.qsize() == 0
 
     def full(self):
-        return self.qsize() == self.size
+        return self.qsize() >= self.size
 
     def put(self, item):
         with self._lock:
-            self._rds.rpush(self.key, item)
+            self._rds.rpush(self.key, json.dumps(item))
+
+    def put_list(self, items):
+        with self._lock:
+            for item in items:
+                self._rds.rpush(self.key, json.dumps(item))
 
     def get_all(self):
         size = self.qsize()
         rs = []
         with self._lock:
             while size:
-                rs.append(self._rds.lpop(self.key))
+                item = self._rds.lpop(self.key) 
+                if item:
+                    rs.append(json.loads(item))
                 size -= 1
             return filter(None, rs)

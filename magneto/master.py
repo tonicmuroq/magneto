@@ -116,7 +116,6 @@ def dispatch_task(tasks):
         return
 
     deploys = {}
-    tasks = [json.loads(t) for t in tasks]
 
     for task in tasks:
         name = task['name']
@@ -149,7 +148,14 @@ def dispatch_task(tasks):
 
 
 def put_task(task):
-    taskqueue.put(task)        
+    if not task:
+        return
+
+    if isinstance(task, list):
+        taskqueue.put_list(task)
+    else:
+        taskqueue.put(task)        
+
     if taskqueue.full():
         while 1:
             if tasklock.acquire(blocking=False):
@@ -159,7 +165,6 @@ def put_task(task):
             else:
                 logger.info('full check blocked')
                 time.sleep(5)
-
 
 
 def check_taskqueue():
