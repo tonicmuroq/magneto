@@ -59,7 +59,7 @@ def task_add_container(app, host):
     port = get_one_port_from_host(host.id)
 
     task = {
-        'name': app.name,
+        'name': app.name.lower(),
         'version': app.version,
         'port': app.port,
         'cmd': app.cmd,
@@ -76,7 +76,7 @@ def task_add_container(app, host):
 
 def task_remove_container(container):
     task = {
-        'name': container.app.name,
+        'name': container.app.name.lower(),
         'host': container.host.ip,
         'type': 2,
         'container': container.cid,
@@ -92,7 +92,7 @@ def task_update_container(container, app):
     port = get_one_port_from_host(container.host.id)
 
     task = {
-        'name': app.name,
+        'name': app.name.lower(),
         'uid': user.uid,
         'type': 3,
         'port': app.port,

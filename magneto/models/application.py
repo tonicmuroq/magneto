@@ -104,7 +104,10 @@ class Application(Base):
 
     @property
     def cmd(self):
-        return self.app_yaml.get('cmd', '')
+        cmd = self.app_yaml.get('cmd', '')
+        if isinstance(cmd, basestring):
+            cmd = cmd.split()
+        return cmd
 
     @property
     def port(self):
