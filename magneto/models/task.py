@@ -81,7 +81,7 @@ def task_add_containers(app, host):
     user = add_user_for_app(app)
 
     tasks = []
-    parent = ''
+    link = ''
     for cmd in app.cmds:
         port = get_one_port_from_host(host.id)
         task = {
@@ -96,10 +96,9 @@ def task_add_containers(app, host):
             'memory': 1024*1024*1024*4,
             'cpus': 100,
             'config': app.config,
+            'link': link
         }
-        if parent:
-            task['parent'] = parent
-        parent = '%s_%s' % (app.name, port)
+        link = '%s_%s' % (app.name, port)
         tasks.append(task)
     return tasks
 
