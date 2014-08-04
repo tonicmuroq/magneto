@@ -104,11 +104,7 @@ class Application(Base):
 
     @property
     def cmd(self):
-        cmd = self.app_yaml.get('cmd', '')
-        if isinstance(cmd, basestring):
-            cmd = cmd.split()
-        elif isinstance(cmd, list):
-            cmd = cmd[0].split()
+        cmd = self.app_yaml.get('cmd', [])
         return cmd
 
     @property

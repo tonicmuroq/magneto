@@ -5,6 +5,7 @@ from magneto.models.container import Container
 from magneto.models.task import (
     task_update_container,
     task_add_container,
+    task_add_containers,
     task_remove_container,
 )
 
@@ -17,7 +18,10 @@ def deploy_app_on_hosts(app, hosts):
             tasks = [task_update_container(c, app) for c in containers]
             all_tasks.extend(tasks)
         else:
-            all_tasks.append(task_add_container(app, host))
+            if len(app.cmd) == 1:
+                all_tasks.append(task_add_container(app, host))
+            elif len(app.cmd) > 1:
+                all_tasks.extend(task_add_containers(app, host))
     put_task(all_tasks)
 
 

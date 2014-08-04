@@ -62,7 +62,7 @@ def task_add_container(app, host):
         'name': app.name.lower(),
         'version': app.version,
         'port': app.port,
-        'cmd': app.cmd,
+        'cmd': app.cmd.split(),
         'host': host.ip,
         'type': 1,
         'uid': user.uid,
@@ -72,6 +72,36 @@ def task_add_container(app, host):
         'config': app.config,
     }
     return task
+
+
+def task_add_containers(app, host):
+    from magneto.models.container import get_one_port_from_host
+    from magneto.models.user import add_user_for_app
+
+    user = add_user_for_app(app)
+
+    tasks = []
+    parent = ''
+    for cmd in app.cmds:
+        port = get_one_port_from_host(host.id)
+        task = {
+            'name': app.name.lower(),
+            'version': app.version,
+            'port': app.port,
+            'cmd': cmd.split(),
+            'host': host.ip,
+            'type': 1,
+            'uid': user.uid,
+            'bind': port,
+            'memory': 1024*1024*1024*4,
+            'cpus': 100,
+            'config': app.config,
+        }
+        if parent:
+            task['parent'] = parent
+        parent = '%s_%s' % (app.name, port)
+        tasks.append(task)
+    return tasks
 
 
 def task_remove_container(container):
@@ -97,7 +127,7 @@ def task_update_container(container, app):
         'type': 3,
         'port': app.port,
         'host': container.host.ip,
-        'cmd': app.cmd,
+        'cmd': app.cmd.split(),
         'bind': port,
         'memory': 1024*1024*1024*4,
         'cpus': 100,
