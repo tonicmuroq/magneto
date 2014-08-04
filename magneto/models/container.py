@@ -5,7 +5,7 @@ import sqlalchemy as db
 from random import sample
 
 from magneto.libs.store import session, rds
-from magneto.models import Base, IntegrityError
+from magneto.models import Base, IntegrityError, OperationalError
 
 
 DEFAULT_PORT_RANGE = (49000, 50000)
@@ -31,7 +31,7 @@ class Container(Base):
         try:
             session.add(c)
             session.commit()
-        except IntegrityError:
+        except (IntegrityError, OperationalError):
             session.rollback()
             return None
         return c
