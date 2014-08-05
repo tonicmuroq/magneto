@@ -82,7 +82,7 @@ def task_add_containers(app, host):
 
     tasks = []
     link = ''
-    for cmd in app.cmds:
+    for cmd in app.cmd:
         port = get_one_port_from_host(host.id)
         task = {
             'name': app.name.lower(),
