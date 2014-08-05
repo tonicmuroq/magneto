@@ -17,7 +17,7 @@ class Container(Base):
 
     __tablename__ = 'container'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    cid = db.Column(db.String(40), nullable=False)
+    cid = db.Column(db.String(100), nullable=False)
     host_id = db.Column(db.Integer, nullable=False, index=True)
     app_id = db.Column(db.Integer, nullable=False, index=True)
     status = db.Column(db.Integer, nullable=False, default=0)

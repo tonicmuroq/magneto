@@ -6,7 +6,7 @@ import string
 import sqlalchemy as db
 
 from magneto.libs.store import session, rds
-from magneto.models import Base, IntegrityError
+from magneto.models import Base, IntegrityError, OperationalError
 from magneto.mysql import setup_mysql
 from magneto.config import MYSQL_CONFIG, REDIS_HOST, REDIS_PORT
 
@@ -42,7 +42,7 @@ class Application(Base):
     __table_args__ = db.UniqueConstraint('name', 'version', name='uk_name_version'),
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(50), nullable=False)
-    version = db.Column(db.String(50), nullable=False)
+    version = db.Column(db.String(100), nullable=False)
     pname = db.Column(db.String(50), nullable=False)
 
     app_yaml_key = 'app:app_yaml:%s'
@@ -58,15 +58,17 @@ class Application(Base):
         if not config_yaml:
             config_yaml = '{}'
 
-        # TODO appname hard code
-        app_yaml_dict = json.loads(app_yaml)
+        try:
+            app_yaml_dict = json.loads(app_yaml)
+        except:
+            return None
         aname = app_yaml_dict.get('appname', name)
 
         app = cls(name=aname, version=version, pname=name)
         try:
             session.add(app)
             session.commit()
-        except IntegrityError:
+        except (IntegrityError, OperationalError):
             session.rollback()
             return None
 

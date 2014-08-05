@@ -4,19 +4,19 @@ import json
 import sqlalchemy as db
 
 from magneto.libs.store import session, rds
-from magneto.models import Base, IntegrityError
+from magneto.models import Base, IntegrityError, OperationalError
 
 
 class Task(Base):
     __tablename__ = 'task'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    uuid = db.Column(db.String(50), nullable=False, index=True)
+    uuid = db.Column(db.String(100), nullable=False, index=True)
     seq_id = db.Column(db.Integer)
     type = db.Column(db.Integer)
     status = db.Column(db.Integer, nullable=False, default=0)
     app_id = db.Column(db.Integer, nullable=False)
     host_id = db.Column(db.Integer, nullable=False)
-    cid = db.Column(db.String(50), nullable=False, default='')
+    cid = db.Column(db.String(100), nullable=False, default='')
 
     config_key = 'task:%s:config'
 
@@ -27,7 +27,7 @@ class Task(Base):
         try:
             session.add(task)
             session.commit()
-        except IntegrityError:
+        except (IntegrityError, OperationalError):
             session.rollback()
             return None
         task.config = config
