@@ -13,7 +13,7 @@ from magneto.models.task import (
 def deploy_app_on_hosts(app, hosts):
     all_tasks = []
     for host in hosts:
-        containers = Container.get_multi_by_host_and_app(host.id, app.id)
+        containers = Container.get_multi_by_host_and_appname(host.id, app.name)
         if containers:
             tasks = [task_update_container(c, app) for c in containers]
             all_tasks.extend(tasks)
