@@ -123,13 +123,15 @@ def dispatch_task(tasks):
         name = task['name']
         host = task['host']
         type_ = task['type']
-        deploys.setdefault((name, host, type_), []).append(task)
+        uid = task['uid']
+        deploys.setdefault((name, host, uid, type_), []).append(task)
     
-    for (name, host, type_), task_list in deploys.iteritems():
+    for (name, host, uid, type_), task_list in deploys.iteritems():
         task_id = str(uuid.uuid4())
         chat = {
             'name': name,
             'id': task_id,
+            'uid': uid,
             'type': type_,
             'tasks': task_list,
         }
