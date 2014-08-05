@@ -55,7 +55,7 @@ class MasterHandler(websocket.WebSocketHandler):
                 ts = Task.get_by_uuid(uuid_)
                 for t, rs in zip(ts, res_list):
                     if t.type == 1:
-                        Container.create(rs, t.host_id, t.app_id, t.config['port'])
+                        Container.create(rs, t.host_id, t.app_id, t.config['bind'])
                         t.done()
                     elif t.type == 2:
                         if rs:
@@ -66,7 +66,7 @@ class MasterHandler(websocket.WebSocketHandler):
                         if rs:
                             c = Container.get_by_cid(t.cid)
                             c.delete()
-                            Container.create(rs, t.host_id, t.app_id, t.config['port'])
+                            Container.create(rs, t.host_id, t.app_id, t.config['bind'])
                         t.done()
             # 这次任务全部完成, 重启nginx
             if check_tasks_wait():
