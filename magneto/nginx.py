@@ -28,7 +28,8 @@ def nginx_reload():
 
 def update_nginx_config(app):
     master_nginx_conf = create_master_nginx_conf_for_app(app)
-    ensure_file('/etc/nginx/conf.d/{0}.conf'.format(app.name), master_nginx_conf)
+    ensure_file('/etc/nginx/conf.d/{0}.conf'.format(app.name),
+            content=master_nginx_conf)
 
 
 def create_master_nginx_conf_for_app(app):
