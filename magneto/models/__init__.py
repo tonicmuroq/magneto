@@ -9,6 +9,12 @@ Base = declarative_base()
 
 
 def create_tables():
+    # 注册到SQLAlchemy
+    from magneto.models.application import Application
+    from magneto.models.host import Host
+    from magneto.models.user import User
+    from magneto.models.container import Container
+    from magneto.models.task import Task
     Base.metadata.create_all(engine)
 
 
