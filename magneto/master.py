@@ -134,7 +134,7 @@ def dispatch_task(tasks):
         type_ = task['type']
         uid = task['uid']
         deploys.setdefault((name, host, uid, type_), []).append(task)
-        ensure_dir('/mnt/mfs/permdir/%s' % name, uid, uid)
+        ensure_dir('/mnt/mfs/permdirs/%s' % name, uid, uid)
     
     for (name, host, uid, type_), task_list in deploys.iteritems():
         task_id = str(uuid.uuid4())
