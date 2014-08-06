@@ -6,7 +6,6 @@ from jinja2 import Environment, PackageLoader
 
 import magneto
 from magneto.utils.ensure import ensure_file
-from magneto.helper import get_hosts_for_app
 
 
 class Jinja2(object):
@@ -33,6 +32,7 @@ def update_nginx_config(app):
 
 
 def create_master_nginx_conf_for_app(app):
+    from magneto.helper import get_hosts_for_app
     hosts = get_hosts_for_app(app)
     master_nginx_conf = template.render_template('/levi_nginx.jinja',
             appname=app.name, hosts=hosts)
