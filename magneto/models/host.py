@@ -3,7 +3,7 @@
 import sqlalchemy as db
 
 from magneto.libs.store import session
-from magneto.models import Base, IntegrityError
+from magneto.models import Base, IntegrityError, OperationalError
 
 
 class Host(Base):
@@ -12,6 +12,7 @@ class Host(Base):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     ip = db.Column(db.String(50), nullable=False)
     name = db.Column(db.String(50), nullable=True, default='')
+    status = db.Column(db.Integer, nullable=False, default=0)
 
     @classmethod
     def create(cls, ip, name=''):
@@ -19,7 +20,7 @@ class Host(Base):
         try:
             session.add(host)
             session.commit()
-        except IntegrityError:
+        except (IntegrityError, OperationalError):
             session.rollback()
             return None
         return host
@@ -35,3 +36,27 @@ class Host(Base):
     @classmethod
     def get_multi_by_ip(cls, ips):
         return [cls.get_by_ip(ip) for ip in ips]
+
+    @classmethod
+    def register(cls, ip, name=''):
+        host = cls.get_by_ip(ip)
+        if host and host.is_offline():
+            host.online()
+            return host
+        host = cls.create(ip, name)
+
+    def online(self):
+        self.status = 0
+        session.add(self)
+        session.commit()
+
+    def offline(self):
+        self.status = 1
+        session.add(self)
+        session.commit()
+
+    def is_online(self):
+        return self.status == 0
+
+    def is_offline(self):
+        return self.status == 1

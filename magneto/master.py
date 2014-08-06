@@ -10,6 +10,7 @@ from tornado import websocket
 
 from magneto.libs.store import taskqueue, tasklock
 from magneto.libs.colorlog import ColorizingStreamHandler
+from magneto.libs.consts import ADD_CONTAINER, REMOVE_CONTAINER, UPDATE_CONTAINER
 
 from magneto.models.task import Task
 from magneto.models.container import Container
@@ -40,45 +41,44 @@ class MasterHandler(websocket.WebSocketHandler):
         clients[self.host] = self
         task_wait[self.host] = {}
 
-        logger.info('new host %s registered', self.host)
+        Host.register(self.host)
+        logger.info('new host %s is registered', self.host)
 
     def on_message(self, data):
-        rep  = json.loads(data)
-        if isinstance(rep, dict):
-            # task done
-            # reload nginx, etc.
+        '''
+        * 返回值是一个dict: 部署任务结果, key是任务的uuid, value是对应任务列表完成情况.
+                            成功返回cid, 失败返回''.
+        * 返回值是一个list: docker container status, 每一项是一个status的dict.
+        '''
+        response  = json.loads(data)
+        if isinstance(response, dict):
             tasks = task_wait[self.host]
-            
-            # update database
-            for uuid_, res_list in rep.iteritems():
-                tasks.pop(uuid_, None)
-                ts = Task.get_by_uuid(uuid_)
-                for t, rs in zip(ts, res_list):
-                    if t.type == 1:
-                        Container.create(rs, t.host_id, t.app_id, t.config['bind'])
-                        t.done()
-                    elif t.type == 2:
-                        if rs:
-                            c = Container.get_by_cid(t.cid)
+            for task_uuid, res_list in response.iteritems():
+                tasks.pop(task_uuid, None)
+                for task, cid in zip(Task.get_by_uuid(task_uuid), res_list):
+                    if task.type == ADD_CONTAINER:
+                        Container.create(cid, task.host_id, task.app_id, task.config['bind'])
+                        task.done()
+                    elif task.type == REMOVE_CONTAINER:
+                        if cid:
+                            c = Container.get_by_cid(task.cid)
                             c.delete()
-                        t.done()
-                    elif t.type == 3:
-                        if rs:
-                            c = Container.get_by_cid(t.cid)
+                        task.done()
+                    elif task.type == UPDATE_CONTAINER:
+                        if cid:
+                            c = Container.get_by_cid(task.cid)
                             c.delete()
-                            Container.create(rs, t.host_id, t.app_id, t.config['bind'])
-                        t.done()
+                            Container.create(cid, task.host_id, task.app_id, task.config['bind'])
+                        task.done()
             # 这次任务全部完成, 重启nginx
             if check_tasks_wait():
                 logger.info('all tasks done')
                 tasklock.release()
                 restart_nginx()
 
-        elif isinstance(rep, list):
-            # container 状态
-            for status in rep:
+        elif isinstance(response, list):
+            for status in response:
                 cid = status['Id']
-                #port = status['Ports']['PublicPort']
                 container = Container.get_by_cid(cid)
                 if container:
                     container.status = status
@@ -104,7 +104,7 @@ def check_tasks_wait():
 
 def ping_clients():
     for host, last_check_timestamp in health_timestamp.iteritems():
-        if datetime.now() - last_check_timestamp > timedelta(seconds=30):
+        if datetime.now() - last_check_timestamp > timedelta(seconds=60):
             logger.error('%s is disconnected', host)
 
     for host, client in clients.iteritems():
@@ -140,7 +140,7 @@ def dispatch_task(tasks):
         # save tasks
         for seq_id, task in enumerate(task_list):
             app = Application.get_by_name_and_version(name, task['version'])
-            cid = task['container'] if type_ in (2, 3) else ''
+            cid = task['container'] if type_ in (REMOVE_CONTAINER, UPDATE_CONTAINER) else ''
             Task.create(task_id, seq_id, type_, app.id, ohost.id, cid, task)
 
         client = clients.get(host, None)
