@@ -10,7 +10,7 @@ class Host(Base):
 
     __tablename__ = 'host'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    ip = db.Column(db.String(50), nullable=False)
+    ip = db.Column(db.String(50), nullable=False, unique=True)
     name = db.Column(db.String(50), nullable=True, default='')
     status = db.Column(db.Integer, nullable=False, default=0)
 
