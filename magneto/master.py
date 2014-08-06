@@ -18,6 +18,7 @@ from magneto.models.application import Application
 from magneto.models.host import Host
 
 from magneto.nginx import nginx_reload, update_nginx_config
+from magneto.utils.ensure import ensure_dir
 
 logging.StreamHandler = ColorizingStreamHandler
 logging.BASIC_FORMAT = "%(asctime)s [%(name)s] %(message)s"
@@ -133,6 +134,7 @@ def dispatch_task(tasks):
         type_ = task['type']
         uid = task['uid']
         deploys.setdefault((name, host, uid, type_), []).append(task)
+        ensure_dir('/mnt/mfs/permdir/%s' % name, uid, uid)
     
     for (name, host, uid, type_), task_list in deploys.iteritems():
         task_id = str(uuid.uuid4())
