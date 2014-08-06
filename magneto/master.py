@@ -17,6 +17,8 @@ from magneto.models.container import Container
 from magneto.models.application import Application
 from magneto.models.host import Host
 
+from magneto.nginx import nginx_reload, update_nginx_config
+
 logging.StreamHandler = ColorizingStreamHandler
 logging.BASIC_FORMAT = "%(asctime)s [%(name)s] %(message)s"
 logging.basicConfig(level=logging.INFO)
@@ -53,9 +55,11 @@ class MasterHandler(websocket.WebSocketHandler):
         response  = json.loads(data)
         if isinstance(response, dict):
             tasks = task_wait[self.host]
+            app_ids = set()
             for task_uuid, res_list in response.iteritems():
                 tasks.pop(task_uuid, None)
                 for task, cid in zip(Task.get_by_uuid(task_uuid), res_list):
+                    app_ids.add(task.app_id)
                     if task.type == ADD_CONTAINER:
                         Container.create(cid, task.host_id, task.app_id, task.config['bind'])
                         task.done()
@@ -74,7 +78,7 @@ class MasterHandler(websocket.WebSocketHandler):
             if check_tasks_wait():
                 logger.info('all tasks done')
                 tasklock.release()
-                restart_nginx()
+                restart_nginx(app_ids)
 
         elif isinstance(response, list):
             for status in response:
@@ -91,7 +95,11 @@ class MasterHandler(websocket.WebSocketHandler):
             del clients[self.host]
 
 
-def restart_nginx():
+def restart_nginx(app_ids):
+    apps = [Application.get(i) for i in app_ids]
+    for app in apps:
+        update_nginx_config(app)
+    nginx_reload()
     logger.info('restart-nginx')
 
 

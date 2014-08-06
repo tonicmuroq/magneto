@@ -6,6 +6,7 @@ from jinja2 import Environment, PackageLoader
 
 import magneto
 from magneto.utils.ensure import ensure_file
+from magneto.helper import get_hosts_for_app
 
 
 class Jinja2(object):
@@ -22,30 +23,17 @@ class Jinja2(object):
 template = Jinja2(magneto.__name__)
 
 
-def restart_nginx():
+def nginx_reload():
     check_call(['nginx', '-s', 'reload'])
 
 
-def update_nginx(app, containers):
-    """
-    1. update nginx config
-    2. restart nginx
-    """
-    nginx_conf = create_nginx_config(app, containers)
-    ensure_file('/etc/nginx/conf.d/nginx_{0}.conf'.format(app), nginx_conf)
-    restart_nginx()
+def update_nginx_config(app):
+    master_nginx_conf = create_master_nginx_conf_for_app(app)
+    ensure_file('/etc/nginx/conf.d/{0}.conf'.format(app.name), master_nginx_conf)
 
 
-def create_nginx_config(app, containers):
-    # containers 现在是一个list
-    # [
-    #     '10.1.201.16:49155',
-    #     '10.1.201.16:49156',
-    #     '10.1.201.16:49158',
-    # ]
-    # TODO 封装
-    nodes = containers
-    backups = []
-    nginx_conf = template.render_template('/app_nginx.jinja',
-            app=app, nodes=nodes, backups=backups)
-    return nginx_conf
+def create_master_nginx_conf_for_app(app):
+    hosts = get_hosts_for_app(app)
+    master_nginx_conf = template.render_template('/levi_nginx.jinja',
+            appname=app.name, hosts=hosts)
+    return master_nginx_conf

@@ -45,6 +45,17 @@ class Container(Base):
         return session.query(cls).filter(cls.host_id == host_id).all()
 
     @classmethod
+    def get_multi_by_appid(cls, app_id):
+        return session.query(cls).filter(cls.app_id == app_id).all()
+
+    @classmethod
+    def get_multi_by_appname(cls, appname):
+        from magneto.models.application import Application
+        apps = Application.get_multi_by_name(appname)
+        app_ids = [app.id for app in apps if app]
+        return session.query(cls).filter(cls.app_id.in_(app_ids)).all()
+
+    @classmethod
     def get_multi_by_host_and_appname(cls, host_id, appname):
         from magneto.models.application import Application
         apps = Application.get_multi_by_name(appname)

@@ -2,6 +2,7 @@
 
 from magneto.master import put_task
 from magneto.models.container import Container
+from magneto.models.host import Host
 from magneto.models.task import (
     task_update_container,
     task_add_container,
@@ -33,3 +34,10 @@ def remove_app_from_hosts(app, hosts):
             tasks = [task_remove_container(c) for c in containers]
             all_tasks.extend(tasks)
     put_task(all_tasks)
+
+
+def get_hosts_for_app(app):
+    containers = Container.get_multi_by_appid(app.id)
+    host_ids = set([c.host_id for c in containers if c])
+    hosts = [Host.get(i) for i in host_ids]
+    return filter(None, hosts)
