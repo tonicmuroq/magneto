@@ -82,7 +82,7 @@ class RemoveAppAPIHandler(tornado.web.RequestHandler):
 class AddContainerAPIHandler(tornado.web.RequestHandler):
 
     def post(self, app_name, app_version):
-        host = self.get_body_arguments('host')
+        host = self.get_body_argument('host')
         host = Host.get_by_ip(host)
 
         app = Application.get_by_name_and_version(app_name, app_version)
