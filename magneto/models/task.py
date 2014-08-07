@@ -109,6 +109,7 @@ def task_remove_container(container):
         'host': container.host.ip,
         'type': 2,
         'uid': 0,
+        'version': container.app.version,
         'container': container.cid,
     }
     return task
