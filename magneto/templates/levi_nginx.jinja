@@ -8,7 +8,7 @@ server {
     listen 80;
     server_name {{ appname }}.intra.hunantv.com;
 
-    proxy_set_header X-SRI-APPNAME {{ appname }}_backend;
+    proxy_set_header X-NBE-APPNAME {{ appname }}_backend;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $remote_addr;
     proxy_set_header Host $host;
