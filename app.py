@@ -2,7 +2,7 @@
 
 from tornado import web, ioloop
 
-from magneto.models import create_tables, create_data
+from magneto.models import create_tables
 from magneto.api import (
     GetAppAPIHandler,
     AddAppAPIHandler,
@@ -10,6 +10,7 @@ from magneto.api import (
     DeployAppAPIHandler,
     RemoveAppAPIHandler,
     AppSchemaAPIHandler,
+    AddContainerAPIHandler,
 )
 from magneto.master import (
     MasterHandler,
@@ -27,6 +28,7 @@ HANDLERS = [
     (r'/host/new', AddHostAPIHandler),
     (r'/app/(\w+)/(\w+)', GetAppAPIHandler),
     (r'/app/(\w+)/(\w+)/deploy', DeployAppAPIHandler),
+    (r'/app/(\w+)/(\w+)/add', AddContainerAPIHandler),
     (r'/app/(\w+)/(\w+)/remote', RemoveAppAPIHandler),
     (r'/app/(\w+)/(\w+)/schema', AppSchemaAPIHandler),
 ]

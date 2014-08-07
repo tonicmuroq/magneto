@@ -6,7 +6,7 @@ from cStringIO import StringIO
 from magneto.models.application import Application
 from magneto.models.host import Host 
 
-from magneto.helper import deploy_app_on_hosts, remove_app_from_hosts
+from magneto.helper import deploy_app_on_hosts, remove_app_from_hosts, add_app_on_host
 
 
 _OK_RESP = {'r': 0}
@@ -76,4 +76,15 @@ class RemoveAppAPIHandler(tornado.web.RequestHandler):
 
         app = Application.get_by_name_and_version(app_name, app_version)
         remove_app_from_hosts(app, hosts)
+        self.write(_OK_RESP)
+
+
+class AddContainerAPIHandler(tornado.web.RequestHandler):
+
+    def post(self, app_name, app_version):
+        host = self.get_body_arguments('host')
+        host = Host.get_by_ip(host)
+
+        app = Application.get_by_name_and_version(app_name, app_version)
+        add_app_on_host(app, host)
         self.write(_OK_RESP)

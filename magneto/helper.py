@@ -26,6 +26,10 @@ def deploy_app_on_hosts(app, hosts):
     put_task(all_tasks)
 
 
+def add_app_on_host(app, host):
+    put_task(task_add_container(app, host))
+
+
 def remove_app_from_hosts(app, hosts):
     all_tasks = []
     for host in hosts:
