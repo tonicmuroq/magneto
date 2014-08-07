@@ -85,7 +85,7 @@ def ensure_file(path, owner='root', group='root', mode=0644, content=''):
     os.chown(path, get_uid(owner), get_gid(group))
 
 
-def ensure_file_absent(path, notify=None):
+def ensure_file_absent(path):
     if os.path.lexists(path):
         os.unlink(path)
 

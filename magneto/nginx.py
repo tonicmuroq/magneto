@@ -5,7 +5,7 @@ from subprocess import check_call
 from jinja2 import Environment, PackageLoader
 
 import magneto
-from magneto.utils.ensure import ensure_file
+from magneto.utils.ensure import ensure_file, ensure_file_absent
 
 
 class Jinja2(object):
@@ -28,13 +28,18 @@ def nginx_reload():
 
 def update_nginx_config(app):
     master_nginx_conf = create_master_nginx_conf_for_app(app)
-    ensure_file('/etc/nginx/conf.d/{0}.conf'.format(app.name),
-            content=master_nginx_conf)
+    conf_file_name = '/etc/nginx/conf.d/{0}.conf'.format(app.name)
+    if not master_nginx_conf:
+        ensure_file_absent(conf_file_name)
+    else:
+        ensure_file(conf_file_name, content=master_nginx_conf)
 
 
 def create_master_nginx_conf_for_app(app):
     from magneto.helper import get_hosts_for_app
     hosts = get_hosts_for_app(app)
+    if not hosts:
+        return ''
     master_nginx_conf = template.render_template('/levi_nginx.jinja',
             appname=app.name, hosts=hosts)
     return master_nginx_conf
