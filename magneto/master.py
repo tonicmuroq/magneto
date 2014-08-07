@@ -92,8 +92,8 @@ class MasterHandler(websocket.WebSocketHandler):
         health_timestamp[self.host] = datetime.now()
 
     def on_close(self):
-        if self.host in clients:
-            del clients[self.host]
+        clients.pop(self.host, None)
+        health_timestamp.pop(self.host, None)
 
 
 def restart_nginx(app_ids):
@@ -115,6 +115,7 @@ def ping_clients():
     for host, last_check_timestamp in health_timestamp.iteritems():
         if datetime.now() - last_check_timestamp > timedelta(seconds=60):
             logger.error('%s is disconnected', host)
+            health_timestamp.pop(host, None)
 
     for host, client in clients.iteritems():
         client.ping(bytes(host))
