@@ -29,7 +29,7 @@ HANDLERS = [
     (r'/app/(\w+)/(\w+)', GetAppAPIHandler),
     (r'/app/(\w+)/(\w+)/deploy', DeployAppAPIHandler),
     (r'/app/(\w+)/(\w+)/add', AddContainerAPIHandler),
-    (r'/app/(\w+)/(\w+)/remote', RemoveAppAPIHandler),
+    (r'/app/(\w+)/(\w+)/remove', RemoveAppAPIHandler),
     (r'/app/(\w+)/(\w+)/schema', AppSchemaAPIHandler),
 ]
 
