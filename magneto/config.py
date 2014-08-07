@@ -15,6 +15,7 @@ REDIS_PORT = 6379
 MYSQL_CONFIG_ROOT = '/etc/sri/mysql'
 
 APP_PORT = 8881
+LEVI_NGINX_PORT = 80
 
 try:
     from local_config import *

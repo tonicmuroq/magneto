@@ -5,6 +5,7 @@ from subprocess import check_call
 from jinja2 import Environment, PackageLoader
 
 import magneto
+from magneto.config import LEVI_NGINX_PORT
 from magneto.utils.ensure import ensure_file, ensure_file_absent
 
 
@@ -41,5 +42,5 @@ def create_master_nginx_conf_for_app(app):
     if not hosts:
         return ''
     master_nginx_conf = template.render_template('/levi_nginx.jinja',
-            appname=app.name, hosts=hosts)
+            appname=app.name, hosts=hosts, port=LEVI_NGINX_PORT)
     return master_nginx_conf

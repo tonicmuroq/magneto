@@ -1,6 +1,6 @@
 upstream {{ appname }}_backend {
     {% for host in hosts %}
-    server {{ host.ip }}:16000;
+    server {{ host.ip }}:{{ port }} max_fails=1 fail_timeout=1s;
     {% endfor %}
 }
 
