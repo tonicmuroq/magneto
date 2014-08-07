@@ -5,7 +5,7 @@ MYSQL_CONFIG = {
     'user': 'platform_root',
     'passwd': 'mnjksghqFGeksh342ui',
     'host': '10.1.201.58',
-    'db': 'sri',
+    'db': 'nbe',
     'port': 3306,
 }
 
