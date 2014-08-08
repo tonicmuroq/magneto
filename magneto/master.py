@@ -17,7 +17,7 @@ from magneto.models.container import Container
 from magneto.models.application import Application
 from magneto.models.host import Host
 
-from magneto.nginx import nginx_reload, update_nginx_config
+from magneto.infrastructure import nginx_reload, update_nginx_config
 from magneto.utils.ensure import ensure_dir
 
 logging.StreamHandler = ColorizingStreamHandler

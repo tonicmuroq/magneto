@@ -16,17 +16,15 @@ server {
     # error_page 400 402 403 404 /40x.html;
     # error_page 500 502 503 504 /50x.html;
 
-    # rewrite ^/(.*)/favicon.ico$ /favicon.ico last;
+    rewrite ^/(.*)/favicon.ico$ /favicon.ico last;
 
-    # access_log /data/log/nginx/{{ appname }}-access.log farm;
-    # error_log /data/log/nginx/{{ appname }}-error.log error;
+    access_log  /mnt/mfs/logs/nbe/master/blueberry-access.log  nbe;
+    error_log   /mnt/mfs/logs/nbe/master/blueberry-error.log error;
 
-    # location ~* (favicon.ico) {
-    #     log_not_found off;
-    #     expires 30d;
-    #     root /data/etc/nginx/html/;
-    #     break;
-    # }
+    location ~* (favicon.ico) {
+        log_not_found off;
+        break;
+    }
 
     # location ~* (40x.html|50x.html)$ {
     #     internal;

@@ -12,10 +12,12 @@ MYSQL_CONFIG = {
 REDIS_HOST = '10.1.201.16'
 REDIS_PORT = 6379
 
-MYSQL_CONFIG_ROOT = '/etc/sri/mysql'
-
 APP_PORT = 8881
 LEVI_NGINX_PORT = 80
+
+MAGNETO_NGINX_BIN = '/usr/sbin/nginx'
+MAGNETO_NGINX_CONF_DIR = '/etc/nginx/conf.d'
+KIBANA_CONF_DIR = '/mnt/mfs/kibana/conf.d'
 
 try:
     from local_config import *
