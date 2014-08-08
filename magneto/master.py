@@ -17,7 +17,7 @@ from magneto.models.container import Container
 from magneto.models.application import Application
 from magneto.models.host import Host
 
-from magneto.infrastructure import nginx_reload, update_nginx_config
+from magneto.infrastructure import nginx_reload, update_nginx_config, create_kibana_conf_for_app
 from magneto.utils.ensure import ensure_dir
 
 logging.StreamHandler = ColorizingStreamHandler
@@ -100,6 +100,7 @@ def restart_nginx(app_ids):
     apps = [Application.get(i) for i in app_ids]
     for app in apps:
         update_nginx_config(app)
+        create_kibana_conf_for_app(app)
     nginx_reload()
     logger.info('restart-nginx')
 
