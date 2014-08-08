@@ -26,11 +26,11 @@ HANDLERS = [
     (r'/ws', MasterHandler),
     (r'/app/new', AddAppAPIHandler),
     (r'/host/new', AddHostAPIHandler),
-    (r'/app/(\w+)/(\w+)', GetAppAPIHandler),
-    (r'/app/(\w+)/(\w+)/deploy', DeployAppAPIHandler),
-    (r'/app/(\w+)/(\w+)/add', AddContainerAPIHandler),
-    (r'/app/(\w+)/(\w+)/remove', RemoveAppAPIHandler),
-    (r'/app/(\w+)/(\w+)/schema', AppSchemaAPIHandler),
+    (r'/app/([\-\w]+)/([\-\w]+)', GetAppAPIHandler),
+    (r'/app/([\-\w]+)/([\-\w]+)/deploy', DeployAppAPIHandler),
+    (r'/app/([\-\w]+)/([\-\w]+)/add', AddContainerAPIHandler),
+    (r'/app/([\-\w]+)/([\-\w]+)/remove', RemoveAppAPIHandler),
+    (r'/app/([\-\w]+)/([\-\w]+)/schema', AppSchemaAPIHandler),
 ]
 
 app = web.Application(HANDLERS)
