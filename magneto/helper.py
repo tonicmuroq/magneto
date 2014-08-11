@@ -42,6 +42,6 @@ def remove_app_from_hosts(app, hosts):
 
 def get_hosts_for_app(app):
     containers = Container.get_multi_by_appid(app.id)
-    host_ids = set([c.host_id for c in containers if c and not c.deamon_id])
+    host_ids = set([c.host_id for c in containers if c and not c.daemon_id])
     hosts = [Host.get(i) for i in host_ids]
     return filter(None, hosts)
