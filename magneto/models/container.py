@@ -22,12 +22,13 @@ class Container(Base):
     app_id = db.Column(db.Integer, nullable=False, index=True)
     status = db.Column(db.Integer, nullable=False, default=0)
     port = db.Column(db.Integer, nullable=False, default=0)
+    daemon_id = db.Column(db.String(100), nullable=False, default='')
 
     status_key = 'container:%s:status'
 
     @classmethod
-    def create(cls, cid, host_id, app_id, port=0):
-        c = cls(cid=cid, host_id=host_id, app_id=app_id, port=port)
+    def create(cls, cid, host_id, app_id, port=0, daemon_id=''):
+        c = cls(cid=cid, host_id=host_id, app_id=app_id, port=port, daemon_id=daemon_id)
         try:
             session.add(c)
             session.commit()
