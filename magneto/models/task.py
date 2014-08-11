@@ -1,6 +1,9 @@
 # coding: utf-8
 
+import uuid
 import json
+import hashlib
+import time
 import sqlalchemy as db
 
 from magneto.libs.store import session, rds
@@ -51,7 +54,7 @@ class Task(Base):
         session.commit()
 
 
-def task_add_container(app, host):
+def task_add_container(app, host, daemon=False):
     from magneto.models.container import get_one_port_from_host
     from magneto.models.user import add_user_for_app
 
@@ -70,11 +73,13 @@ def task_add_container(app, host):
         'memory': 1024*1024*1024*4,
         'cpus': 100,
         'config': app.config,
+        'daemon' : _daemon_uuid(daemon),
     }
+
     return task
 
 
-def task_add_containers(app, host):
+def task_add_containers(app, host, daemon=False):
     from magneto.models.container import get_one_port_from_host
     from magneto.models.user import add_user_for_app
 
@@ -96,7 +101,8 @@ def task_add_containers(app, host):
             'memory': 1024*1024*1024*4,
             'cpus': 100,
             'config': app.config,
-            'link': link
+            'link': link,
+            'daemon' : _daemon_uuid(daemon),
         }
         link = '%s_%s' % (app.name, port)
         tasks.append(task)
@@ -135,5 +141,14 @@ def task_update_container(container, app):
         'config': app.config,
         'version': app.version,
         'container': container.cid,
+        'daemon': _daemon_uuid(container.daemon_id),
     }
     return task
+
+
+def _daemon_uuid(daemon):
+    if daemon:
+        uid = hashlib.sha1(str(uuid.uuid4()))
+        uid.update(str(time.time()))
+        return uid.hexdigest()[:7]
+    return ''

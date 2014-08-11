@@ -62,7 +62,7 @@ class MasterHandler(websocket.WebSocketHandler):
                 for task, cid in zip(Task.get_by_uuid(task_uuid), res_list):
                     app_ids.add(task.app_id)
                     if task.type == ADD_CONTAINER:
-                        Container.create(cid, task.host_id, task.app_id, task.config['bind'])
+                        Container.create(cid, task.host_id, task.app_id, task.config['bind'], task.config['daemon'])
                         task.done()
                     elif task.type == REMOVE_CONTAINER:
                         if cid:
@@ -73,7 +73,7 @@ class MasterHandler(websocket.WebSocketHandler):
                         if cid:
                             c = Container.get_by_cid(task.cid)
                             c.delete()
-                            Container.create(cid, task.host_id, task.app_id, task.config['bind'])
+                            Container.create(cid, task.host_id, task.app_id, task.config['bind'], task.config['daemon'])
                         task.done()
             # 这次任务全部完成, 重启nginx
             if check_tasks_wait():
