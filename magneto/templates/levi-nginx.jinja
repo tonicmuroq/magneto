@@ -18,8 +18,8 @@ server {
 
     rewrite ^/(.*)/favicon.ico$ /favicon.ico last;
 
-    access_log  /mnt/mfs/logs/nbe/master/blueberry-access.log  nbe;
-    error_log   /mnt/mfs/logs/nbe/master/blueberry-error.log error;
+    access_log  /mnt/mfs/logs/nbe/master/{{ appname }}-access.log  nbe;
+    error_log   /mnt/mfs/logs/nbe/master/{{ appname }}-error.log error;
 
     location ~* (favicon.ico) {
         log_not_found off;
