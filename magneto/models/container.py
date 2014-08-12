@@ -17,7 +17,7 @@ class Container(Base):
 
     __tablename__ = 'container'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    cid = db.Column(db.String(100), nullable=False)
+    cid = db.Column(db.String(100), nullable=False, index=True)
     host_id = db.Column(db.Integer, nullable=False, index=True)
     app_id = db.Column(db.Integer, nullable=False, index=True)
     status = db.Column(db.Integer, nullable=False, default=0)
@@ -40,6 +40,10 @@ class Container(Base):
     @classmethod
     def get_by_cid(cls, cid):
         return session.query(cls).filter(cls.cid == cid).first()
+
+    @classmethod
+    def get_by_shortened_cid(cls, shortened_cid):
+        return session.query(cls).filter(cls.cid.like('%s%%' % shortened_cid)).first()
 
     @classmethod
     def get_multi_by_host(cls, host_id):
