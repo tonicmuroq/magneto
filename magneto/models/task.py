@@ -59,7 +59,7 @@ def task_add_container(app, host, daemon=False):
     from magneto.models.user import add_user_for_app
 
     user = add_user_for_app(app)
-    port = get_one_port_from_host(host.id) if daemon else 0
+    port = 0 if daemon else get_one_port_from_host(host.id)
 
     task = {
         'name': app.name.lower(),
@@ -88,7 +88,7 @@ def task_add_containers(app, host, daemon=False):
     tasks = []
     link = ''
     for cmd in app.cmd:
-        port = get_one_port_from_host(host.id) if daemon else 0
+        port = 0 if daemon else get_one_port_from_host(host.id)
         task = {
             'name': app.name.lower(),
             'version': app.version,
