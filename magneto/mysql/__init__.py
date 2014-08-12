@@ -47,16 +47,18 @@ class MySQLSentinel(object):
         sql_cmd = 'CREATE DATABASE IF NOT EXISTS `%s`;'
         self._execute(sql_cmd % db)
 
-    def grant_database(self, appname, passwd, manager_passwd):
+    def grant_database(self, appname, passwd, manager_passwd=''):
         self.select_database(appname)
         sql = ("grant drop, create, select, insert, update, delete "
                 "on `%s`.* to '%s'@'%%' identified by '%s'")
         self._execute(sql % (appname, appname, passwd))
-        # grant manager
-        manager = hashlib.sha256(appname).hexdigest()[:16]
-        sql = ("grant alter, drop, create, select, insert, update, delete "
-                "on `%s`.* to '%s'@'%%' identified by '%s'")
-        self._execute(sql % (appname, manager, manager_passwd))
+
+        if manager_passwd:
+            # grant manager
+            manager = hashlib.sha256(appname).hexdigest()[:16]
+            sql = ("grant alter, drop, create, select, insert, update, delete "
+                    "on `%s`.* to '%s'@'%%' identified by '%s'")
+            self._execute(sql % (appname, manager, manager_passwd))
 
     def _execute(self, sql_cmd, para=()):
         cur = self._conn.cursor()
@@ -72,7 +74,7 @@ class MySQLSentinel(object):
 sentinel = MySQLSentinel()
 
 
-def setup_mysql(appname, password, manager_password):
+def setup_mysql(appname, password, manager_password=''):
     sentinel.create_database(appname)
     sentinel.grant_database(appname, password, manager_password)
 

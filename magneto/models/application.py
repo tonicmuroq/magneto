@@ -148,10 +148,9 @@ class Application(Base):
         if rds.get(key):
             return
         passwd = ''.join(random.sample(string.ascii_letters + string.digits, 8))
-        manager_passwd = ''.join(random.sample(string.ascii_letters + string.digits, 8))
-        setup_mysql(self.name, passwd, manager_passwd)
+        setup_mysql(self.name, passwd)
 
-        rds.set(key, json.dumps([passwd, manager_passwd]))
+        rds.set(key, json.dumps([passwd, '']))
 
     def setup_schema(self):
         pass
