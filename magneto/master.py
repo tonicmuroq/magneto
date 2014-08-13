@@ -7,10 +7,11 @@ import logging
 from datetime import datetime, timedelta
 
 from tornado import websocket
+from tornado.options import options
 
 from magneto.libs.store import taskqueue, tasklock
-from magneto.libs.colorlog import ColorizingStreamHandler
 from magneto.libs.consts import ADD_CONTAINER, REMOVE_CONTAINER, UPDATE_CONTAINER
+from magneto.libs.log import get_logger
 
 from magneto.models.task import Task
 from magneto.models.container import Container
@@ -20,11 +21,10 @@ from magneto.models.host import Host
 from magneto.infrastructure import nginx_reload, update_nginx_config, create_kibana_conf_for_app
 from magneto.utils.ensure import ensure_dir
 
-logging.StreamHandler = ColorizingStreamHandler
-logging.BASIC_FORMAT = "%(asctime)s [%(name)s] %(message)s"
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
+level = logging.DEBUG if options.debug else logging.INFO
+logger = get_logger(__name__, level=level)
+
 
 clients = {}
 health_timestamp = {}
@@ -115,7 +115,7 @@ def check_tasks_wait():
 def ping_clients():
     for host, last_check_timestamp in health_timestamp.iteritems():
         if datetime.now() - last_check_timestamp > timedelta(seconds=60):
-            logger.error('%s is disconnected', host)
+            logger.warn('%s is disconnected', host)
             health_timestamp.pop(host, None)
 
     for host, client in clients.iteritems():
@@ -123,7 +123,7 @@ def ping_clients():
 
 
 def dispatch_task(tasks):
-    logger.info(tasks)
+    logger.debug(tasks)
     if not clients or not tasks:
         tasklock.release()
         return
@@ -175,18 +175,18 @@ def put_task(task):
     if taskqueue.full():
         while 1:
             if tasklock.acquire(blocking=False):
-                logger.info('full check')
+                logger.debug('full check')
                 dispatch_task(taskqueue.get_all())
                 break
             else:
-                logger.info('full check blocked')
+                logger.debug('full check blocked')
                 time.sleep(5)
 
 
 def check_taskqueue():
     if tasklock.acquire(blocking=False):
-        logger.info('time check')
+        logger.debug('time check')
         dispatch_task(taskqueue.get_all())
     else:
-        logger.info('time check blocked')
+        logger.debug('time check blocked')
     return
