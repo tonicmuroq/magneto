@@ -88,6 +88,11 @@ class Application(Base):
         return session.query(cls).filter(cls.name == name).all()
 
     @classmethod
+    def get_latest(cls, name):
+        return session.query(cls).filter(cls.name == name).\
+                order_by(cls.id.desc()).first()
+
+    @classmethod
     def get_by_name_and_version(cls, name, version):
         return session.query(cls).filter(cls.name == name).\
                 filter(cls.version == version).first()

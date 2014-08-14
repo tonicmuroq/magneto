@@ -19,7 +19,7 @@ create_tables()
 
 from magneto.api import (GetAppAPIHandler, AddAppAPIHandler, AddHostAPIHandler,
         DeployAppAPIHandler, RemoveAppAPIHandler, AppSchemaAPIHandler,
-        AddContainerAPIHandler)
+        AddContainerAPIHandler, RemoveContainerAPIHandler)
 from magneto.master import MasterHandler, ping_clients, check_taskqueue
 
 HANDLERS = [
@@ -31,6 +31,7 @@ HANDLERS = [
     (r'/app/([\-\w]+)/([\-\w]+)/add', AddContainerAPIHandler),
     (r'/app/([\-\w]+)/([\-\w]+)/remove', RemoveAppAPIHandler),
     (r'/app/([\-\w]+)/([\-\w]+)/schema', AppSchemaAPIHandler),
+    (r'/container/([\-\w]+)/remove', RemoveContainerAPIHandler),
 ]
 
 app = web.Application(HANDLERS)

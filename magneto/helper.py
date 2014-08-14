@@ -40,6 +40,10 @@ def remove_app_from_hosts(app, hosts):
     put_task(all_tasks)
 
 
+def remove_container(container):
+    put_task(task_remove_container(container))
+
+
 def get_hosts_for_app(app):
     containers = Container.get_multi_by_appid(app.id)
     host_ids = set([c.host_id for c in containers if c and not c.daemon_id])
