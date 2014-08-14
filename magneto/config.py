@@ -16,7 +16,7 @@ LEVI_NGINX_PORT = 80
 
 MAGNETO_NGINX_BIN = '/usr/sbin/nginx'
 MAGNETO_NGINX_CONF_DIR = '/etc/nginx/conf.d'
-MAGNETO_NGINX_URL = '127.0.0.1'
+MAGNETO_NGINX_URL = '127.0.0.1:90'
 KIBANA_CONF_DIR = '/mnt/mfs/kibana/conf.d'
 
 try:
