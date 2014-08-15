@@ -94,6 +94,8 @@ class Application(Base):
 
     @classmethod
     def get_by_name_and_version(cls, name, version):
+        if version == 'latest':
+            return cls.get_latest(name)
         return session.query(cls).filter(cls.name == name).\
                 filter(cls.version == version).first()
 
