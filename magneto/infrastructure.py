@@ -10,7 +10,7 @@ from magneto.templates import template
 
 
 _UPSTREAM_TMPL = 'server {ip}:{port};'
-_UPSTREAM_URL = 'http://%/upstream/%s'
+_UPSTREAM_URL = 'http://%s/upstream/%s'
 
 
 def nginx_reload():
