@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import os
+import json
 import requests
 from subprocess import check_call
 
@@ -72,5 +73,5 @@ def add_dns(app):
     name = '%s.intra.hunantv.com' % app.name
     host = 'http://%s/host/%s' % (DNS_HOST, name)
     ips = [MAGNETO_HOST, ]
-    r = requests.put(host, data={'ips': ips})
+    r = requests.put(host, data=json.dumps({'ips': ips}))
     return r.status_code == 200
