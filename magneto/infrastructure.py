@@ -1,10 +1,12 @@
 # coding: utf-8
 
 import os
+import json
 import requests
 from subprocess import check_call
 
-from magneto.config import LEVI_NGINX_PORT, MAGNETO_NGINX_BIN, MAGNETO_NGINX_CONF_DIR, MAGNETO_NGINX_URL, KIBANA_CONF_DIR
+from magneto.config import (LEVI_NGINX_PORT, MAGNETO_NGINX_BIN, MAGNETO_NGINX_CONF_DIR, MAGNETO_NGINX_URL,
+        KIBANA_CONF_DIR, MAGNETO_HOST, DNS_HOST)
 from magneto.utils.ensure import ensure_file, ensure_file_absent
 from magneto.templates import template
 
@@ -64,4 +66,12 @@ def _delete_nginx_dynamic_upstream(app):
     if not app:
         return False
     r = requests.delete(_UPSTREAM_URL % (MAGNETO_NGINX_URL, app.name))
+    return r.status_code == 200
+
+
+def add_dns(app):
+    name = '%s.intra.hunantv.com' % app.name
+    host = 'http://%s/host/%s' % (DNS_HOST, name)
+    ips = [MAGNETO_HOST, ]
+    r = requests.put(host, data=json.dumps({'ips': ips}))
     return r.status_code == 200

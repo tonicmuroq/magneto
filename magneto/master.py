@@ -18,7 +18,7 @@ from magneto.models.container import Container
 from magneto.models.application import Application
 from magneto.models.host import Host
 
-from magneto.infrastructure import update_nginx_config, create_kibana_conf_for_app
+from magneto.infrastructure import update_nginx_config, create_kibana_conf_for_app, add_dns
 from magneto.utils.ensure import ensure_dir
 
 
@@ -101,6 +101,7 @@ def restart_nginx(app_ids):
     for app in apps:
         update_nginx_config(app)
         create_kibana_conf_for_app(app)
+        add_dns(app)
     logger.info('restart-nginx')
 
 
