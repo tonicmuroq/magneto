@@ -73,5 +73,5 @@ def add_dns(app):
     name = '%s.intra.hunantv.com' % app.name
     host = 'http://%s/host/%s' % (DNS_HOST, name)
     ips = [MAGNETO_HOST, ]
-    r = requests.put(host, data=json.dumps({'ips': ips}))
+    r = requests.put(host, data=json.dumps({'ip': ips}))
     return r.status_code == 200
