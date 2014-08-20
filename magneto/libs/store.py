@@ -8,7 +8,6 @@ except ImportError:
     from sqlalchemy.orm.scoping import ScopedSession as scoped_session
 
 import redis
-from redis.lock import Lock
 
 from .queue import RedisBlockQueue
 from .deco import NamespacedRedis
@@ -19,4 +18,4 @@ session = scoped_session(sessionmaker(bind=engine))
 
 rds = NamespacedRedis(redis.Redis(host=REDIS_HOST, port=REDIS_PORT), 'magneto')
 taskqueue = RedisBlockQueue('taskqueue', 15, redis_instance=rds)
-tasklock = rds.lock('redis:tasklock', lock_class=Lock, timeout=120, sleep=5)
+tasklock = rds.lock('redis:tasklock', timeout=120, sleep=5)
