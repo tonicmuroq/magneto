@@ -33,5 +33,5 @@ def add_user_for_app(app):
     name = app.name
     user = User.get_by_name(name)
     if not user:
-        user = User.create(name, 'sri')
+        user = User.create(name, 'nbe')
     return user
